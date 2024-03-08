@@ -1,19 +1,13 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using Unity.Entities;
-using Unity.Burst;
-using Unity.Jobs;
-using Unity.Transforms;
 using Unity.Collections;
 using Unity.Mathematics;
-using UnityEditor;
 
 [UpdateAfter(typeof(SpriteSheetCalculationsJob))]
-public class SpriteSheetRenderer : ComponentSystem
+public class SpriteSheetRenderer : SystemBase//ComponentSystem
 {
-
-    public EntityQuery entityQuery;
+    private EntityQuery entityQuery;
 
     protected override void OnUpdate()
     {
@@ -25,7 +19,7 @@ public class SpriteSheetRenderer : ComponentSystem
         Vector4[] uv = new Vector4[1];
         Camera mainC = Camera.main;
         Material SpriteSheetMat = CreateTileMap.GetInstance().SpriteSheetMat;
-        Mesh mesh = CreateTileMap.GetInstance().quadMesh;
+        Mesh mesh = CreateTileMap.GetInstance().QuadMesh;
         int shaderPropertyId = Shader.PropertyToID("_MainTex_UV");
 
         //Account for limitations of DrawMeshInstanced
@@ -39,8 +33,8 @@ public class SpriteSheetRenderer : ComponentSystem
             for (int j = 0; j < sliceSize; j++)
             {
                 CellComponent cellComponentData = cellSpriteDataArray[i + j];
-                matrixList.Add(cellComponentData.matrix);
-                uvList.Add(cellComponentData.uv);
+                matrixList.Add(cellComponentData.Matrix);
+                uvList.Add(cellComponentData.UV);
             }
 
             materialPropertyBlock.SetVectorArray(shaderPropertyId, uvList);
@@ -55,5 +49,4 @@ public class SpriteSheetRenderer : ComponentSystem
 
         cellSpriteDataArray.Dispose();
     }
-
 }

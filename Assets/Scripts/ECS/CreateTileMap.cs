@@ -1,67 +1,69 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using UnityEngine;
 using Unity.Entities;
-using Unity.Collections;
-using Unity.Rendering;
 using Unity.Transforms;
-using System.Linq.Expressions;
 using Unity.Mathematics;
-using System.Numerics;
-using System;
-using Unity.Jobs;
-using Unity.Burst;
 
+/// <summary>
+/// 
+/// </summary>
+public enum GravityEnum
+{
+    Down,
+    Up,
+    Left,
+    Right
+}
+
+/// <summary>
+/// 
+/// </summary>
 public class CreateTileMap : MonoBehaviour
 {
     public int GridWidth = 80;
     public int GridHeight = 40;
-    //Liquid placed when clicked
-    public int liquidPerClick = 5;
-
-    [SerializeField]
-    float CellSize = 1;
-
-    private Entity[] Cells;
-
-    bool Fill;
-
-    Unity.Entities.EntityManager em;
-
-    EntityArchetype CellArchtype;
-
-    public Mesh quadMesh;
+    public Mesh QuadMesh;
     public Material SpriteSheetMat;
 
-    private static CreateTileMap instance;
+    [SerializeField] private int _liquidPerClick = 5; //Liquid placed when clicked
+    [SerializeField] private GravityEnum _gravity = GravityEnum.Down;
+    [SerializeField] private float _cellSize = 1;
+
+    private Entity[] _cells;
+    private bool _fill;
+    private EntityManager _entityManager;
+    private EntityArchetype _cellArchetype;
+    private CellComponent _clickedCell;
+
+    private static CreateTileMap _instance;
 
     public static CreateTileMap GetInstance()
     {
-        return instance;
+        return _instance;
     }
 
     void Awake()
     {
-        instance = this;
+        _instance = this;
 
         float screenRatio = (float)Screen.width / (float)Screen.height;
-        float targetRatio = ((float)GridWidth * CellSize) / ((float)GridHeight * CellSize);
+        float targetRatio = ((float)GridWidth * _cellSize) / ((float)GridHeight * _cellSize);
 
         if (screenRatio >= targetRatio)
         {
-            Camera.main.orthographicSize = ((float)GridHeight * CellSize) / 2;
+            Camera.main.orthographicSize = ((float)GridHeight * _cellSize) / 2;
         }
         else
         {
             float differenceInSize = targetRatio / screenRatio;
-            Camera.main.orthographicSize = ((float)GridHeight * CellSize) / 2 * differenceInSize;
+            Camera.main.orthographicSize = ((float)GridHeight * _cellSize) / 2 * differenceInSize;
         }
 
         //Grab Entity Manager
-        em = World.DefaultGameObjectInjectionWorld.EntityManager;
+        _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
 
         //Cell ArchType
-        CellArchtype = em.CreateArchetype(
+        _cellArchetype = _entityManager.CreateArchetype(
             typeof(LocalToWorld),
             typeof(Translation),
             typeof(Rotation),
@@ -72,28 +74,32 @@ public class CreateTileMap : MonoBehaviour
         CreateGrid();
     }
 
-    // Update is called once per frame
-    private CellComponent clickedCell;
     void Update()
     {
         // Convert mouse position to Grid Coordinates
-        UnityEngine.Vector2 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        int x = (int)((pos.x - (this.transform.position.x - (GridWidth * CellSize / 2))));
-        int y = -(int)((pos.y - (this.transform.position.y + (GridHeight * CellSize / 2) + CellSize)));
+        Vector2 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        int x = (int)((pos.x - (this.transform.position.x - (GridWidth * _cellSize / 2))));
+        int y = -(int)((pos.y - (this.transform.position.y + (GridHeight * _cellSize / 2) + _cellSize)));
+
+        // Check if we clicked outside of the grid
+        if (x < 0 || y < 0 || x >= GridWidth || y >= GridHeight)
+        {
+            return;
+        }
 
         // Check if we are filling or erasing walls
         if (Input.GetMouseButtonDown(0))
         {
             if ((x > 0 && x < GridWidth) && (y > 0 && y < GridHeight))
             {  //Click is inside grid, grab cell component data
-                clickedCell = em.GetComponentData<CellComponent>(Cells[CalculateCellIndex(x, y, GridWidth)]);
-                if (clickedCell.CellType == 0)
+                _clickedCell = _entityManager.GetComponentData<CellComponent>(_cells[CalculateCellIndex(x, y, GridWidth)]);
+                if (!_clickedCell.Solid)
                 {
-                    Fill = true;
+                    _fill = true;
                 }
                 else
                 {
-                    Fill = false;
+                    _fill = false;
                 }
             }
         }
@@ -105,20 +111,20 @@ public class CreateTileMap : MonoBehaviour
             {
                 if ((x > 0 && x < GridWidth) && (y > 0 && y < GridHeight))
                 {
-                    clickedCell = em.GetComponentData<CellComponent>(Cells[CalculateCellIndex(x, y, GridWidth)]);
-                    if (Fill)
+                    _clickedCell = _entityManager.GetComponentData<CellComponent>(_cells[CalculateCellIndex(x, y, GridWidth)]);
+                    if (_fill)
                     {
-                        clickedCell.CellType = 1;
-                        clickedCell.SpriteSheetFrame = 2;
-                        clickedCell.Liquid = 0;
-                        em.SetComponentData(Cells[CalculateCellIndex(x, y, GridWidth)], clickedCell);
+                        _clickedCell.Solid = true;
+                        _clickedCell.SpriteSheetFrame = 2;
+                        _clickedCell.Liquid = 0;
+                        _entityManager.SetComponentData(_cells[CalculateCellIndex(x, y, GridWidth)], _clickedCell);
                     }
                     else
                     {
-                        clickedCell.CellType = 0;
-                        clickedCell.Liquid = 0;
-                        clickedCell.SpriteSheetFrame = 0;
-                        em.SetComponentData(Cells[CalculateCellIndex(x, y, GridWidth)], clickedCell);
+                        _clickedCell.Solid = false;
+                        _clickedCell.Liquid = 0;
+                        _clickedCell.SpriteSheetFrame = 0;
+                        _entityManager.SetComponentData(_cells[CalculateCellIndex(x, y, GridWidth)], _clickedCell);
                     }
                 }
             }
@@ -127,40 +133,70 @@ public class CreateTileMap : MonoBehaviour
         // Right click places liquid
         if (Input.GetMouseButton(1))
         {
-            clickedCell = em.GetComponentData<CellComponent>(Cells[CalculateCellIndex(x, y, GridWidth)]);
+            _clickedCell = _entityManager.GetComponentData<CellComponent>(_cells[CalculateCellIndex(x, y, GridWidth)]);
             if ((x > 0 && x < GridWidth) && (y > 0 && y < GridHeight))
             {
-                clickedCell.CellType = 0;
-                clickedCell.Liquid = liquidPerClick;
-                clickedCell.SpriteSheetFrame = 1;
-                em.SetComponentData(Cells[CalculateCellIndex(x, y, GridWidth)], clickedCell);
+                _clickedCell.Solid = false;
+                _clickedCell.Liquid = _liquidPerClick;
+                _clickedCell.SpriteSheetFrame = 1;
+                _entityManager.SetComponentData(_cells[CalculateCellIndex(x, y, GridWidth)], _clickedCell);
             }
         }
     }
 
-    void CreateGrid()
+    public Vector2 GetGravityVector()
     {
+        switch (_gravity)
+        {
+            case GravityEnum.Down:
+                return new Vector2(0.0f, 1.0f);
+
+            case GravityEnum.Left:
+                return new Vector2(-1.0f, 0.0f);
+
+            case GravityEnum.Right:
+                return new Vector2(1.0f, 0.0f);
+
+            case GravityEnum.Up:
+                return new Vector2(0.0f, -1.0f);
+
+            default:
+                throw new NotImplementedException("Unimplemented gravity direction.");
+        }
+    }
+
+    private void CreateGrid()
+    {
+        Vector2 gravity = GetGravityVector();
+        
+        Vector3 bottom = new Vector3(gravity.x, gravity.y, 0.0f);
+        Vector3 left = -Vector3.Cross(bottom, new Vector3(0.0f, 0.0f, 1.0f));
+
+        int xLeft = (int)left.x;
+        int yLeft = (int)left.y;
+        int xBottom = (int)bottom.x;
+        int yBottom = (int)bottom.y;
 
         //Create Entity TileMap
-        Cells = new Entity[GridWidth * GridHeight];
+        _cells = new Entity[GridWidth * GridHeight];
 
         //Make this object transform center of map
         UnityEngine.Vector3 offset = new UnityEngine.Vector3(
-            this.transform.position.x - (((((float)GridWidth * CellSize)) / 2) - (CellSize/2)),
-            this.transform.position.y + (((((float)GridHeight * CellSize)) / 2) + (CellSize / 2)), 0);
+            this.transform.position.x - (((((float)GridWidth * _cellSize)) / 2) - (_cellSize/2)),
+            this.transform.position.y + (((((float)GridHeight * _cellSize)) / 2) + (_cellSize / 2)), 0);
 
         // Create Tiles
         bool isWall;
-        int index = 0;
-        for (int y = 0; y < GridHeight; y++)
+        int index;
+        for (int y = 0; y < GridHeight; ++y)
         {
-            for (int x = 0; x < GridWidth; x++)
+            for (int x = 0; x < GridWidth; ++x)
             {
-                Entity cell;
                 isWall = false;
+                index = CalculateCellIndex(x, y, GridWidth);
 
                 //Create Cell Entity
-                cell = em.CreateEntity(CellArchtype);
+                Entity cell = _entityManager.CreateEntity(_cellArchetype);
 
                 // Border Tiles
                 if (x == 0 || y == 0 || x == GridWidth - 1 || y == GridHeight - 1)
@@ -169,17 +205,17 @@ public class CreateTileMap : MonoBehaviour
                 }
 
                 //Calculate World Pos
-                float xpos = offset.x + (float)(x * CellSize);
-                float ypos = offset.y - (float)(y * CellSize);
+                float xpos = offset.x + (float)(x * _cellSize);
+                float ypos = offset.y - (float)(y * _cellSize);
                 float3 pos = new float3(xpos, ypos, 0);
 
                 //Fill Position Data
-                em.SetComponentData(cell, new Translation
+                _entityManager.SetComponentData(cell, new Translation
                 {
                     Value = pos
                 });
 
-                //Calc Neighbors Indexs
+                //Calc Neighbors Indexes
                 int bottomIndex = -1;
                 int topIndex = -1;
                 int leftIndex = -1;
@@ -187,34 +223,35 @@ public class CreateTileMap : MonoBehaviour
 
                 if (index - GridWidth >= 0)
                 {
-                    topIndex = (index - GridWidth);  // north
+                    topIndex = CalculateCellIndex(x - xBottom, y - yBottom, GridWidth);//(index - GridWidth);  // north
                 }
+
                 if (index % GridWidth != 0)
                 {
-                    leftIndex = (index - 1);  // west
+                    leftIndex = CalculateCellIndex(x + xLeft, y + yLeft, GridWidth);//(index - 1);  // west
                 }
 
                 if (((index + 1) % GridWidth) != 0)
                 {
-                    rightIndex = index + 1;  // east
+                    rightIndex = CalculateCellIndex(x -xLeft, y - yLeft, GridWidth);//index + 1;  // east
                 }
 
-                if (index + GridWidth < Cells.Length)
+                if (index + GridWidth < _cells.Length)
                 {
-                    bottomIndex = (index + GridWidth);  // south
+                    bottomIndex = CalculateCellIndex(x + xBottom, y + yBottom, GridWidth);//(index + GridWidth);  // south
                 }
 
                 if (isWall)
                 {
                     //Set CellComponent Data
-                    em.SetComponentData(cell, new CellComponent
+                    _entityManager.SetComponentData(cell, new CellComponent
                     {
                         xGrid = x,
                         yGrid = y,
-                        CellType = 1, //Solid
+                        Solid = true, //Solid
                         SpriteSheetFrame = 2, //Wall Frame
-                        worldPos = new Unity.Mathematics.float2(xpos, ypos),
-                        CellSize = CellSize,
+                        WorldPos = new float2(xpos, ypos),
+                        CellSize = _cellSize,
                         Liquid = 0f,
                         Settled = false,
                         index = index,
@@ -223,16 +260,18 @@ public class CreateTileMap : MonoBehaviour
                         BottomIndex = bottomIndex,
                         TopIndex = topIndex
                     });
-                }else{
+                }
+                else
+                {
                     //Set Empty Cell Data
-                    em.SetComponentData(cell, new CellComponent
+                    _entityManager.SetComponentData(cell, new CellComponent
                     {
                         xGrid = x,
                         yGrid = y,
-                        CellType = 0,//NOT Solid
+                        Solid = false,//NOT Solid
                         SpriteSheetFrame = 0, //Empty Frame
-                        worldPos = new Unity.Mathematics.float2(xpos, ypos),
-                        CellSize = CellSize,
+                        WorldPos = new float2(xpos, ypos),
+                        CellSize = _cellSize,
                         Liquid = 0f, //Empty
                         Settled = false,
                         index = index,
@@ -244,15 +283,13 @@ public class CreateTileMap : MonoBehaviour
                 }
 
                 //Add Cell to Array
-                Cells[CalculateCellIndex(x, y, GridWidth)] = cell;
-                index++;
+                _cells[index] = cell;
             }
         }
     }
 
-    private int CalculateCellIndex(int x, int y, int gridWidth)
+    private static int CalculateCellIndex(int x, int y, int gridWidth)
     {
         return x + y * gridWidth;
     }
-
 }

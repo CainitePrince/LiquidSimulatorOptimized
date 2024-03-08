@@ -1,20 +1,17 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.Entities;
-using Unity.Mathematics;
 
 public struct CellComponent : IComponentData
 {
-    //Empty(0) or Solid(1)
-    public int CellType;
+    public Matrix4x4 Matrix;
+    public Vector4 UV;
+
+    //World Pos
+    public Unity.Mathematics.float2 WorldPos;
 
     //Rendering Data
     //0 = Empty //1 = Water //2 == Wall
     public int SpriteSheetFrame;
-    public Vector4 uv;
-    public Matrix4x4 matrix;
-    public bool isDownFlowingLiquid;
 
     //CellSize
     public float CellSize;
@@ -23,12 +20,8 @@ public struct CellComponent : IComponentData
     public int xGrid;
     public int yGrid;
     public int index;
-
-    //World Pos
-    public Unity.Mathematics.float2 worldPos;
     
     //Check is Water is settled
-    public bool Settled;
     public int SettleCount;
 
     public float Liquid;
@@ -45,4 +38,9 @@ public struct CellComponent : IComponentData
     public float modifyTop;
     public float modifyLeft;
     public float modifyRight;
+
+    //Empty(0) or Solid(1)
+    public bool Solid;
+    public bool Settled;
+    public bool IsDownFlowingLiquid;
 }

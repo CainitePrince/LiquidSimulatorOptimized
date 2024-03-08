@@ -12,6 +12,7 @@ public class LiquidSimulator : JobComponentSystem
     private EntityQuery entityQuery;
 
     protected override JobHandle OnUpdate(JobHandle inputDeps)
+    //protected override void OnUpdate()
     {
 
         //Get Entity Query of CellComponents
@@ -106,7 +107,7 @@ public class LiquidSimulator : JobComponentSystem
         {
 
             // Validate cell
-            if (current[index].CellType != 0) { return; } //Is Solid
+            if (current[index].Solid) { return; } //Is Solid
             if (current[index].Liquid == 0) { return; } //Empty
             if (current[index].Settled) { return; } //Settled
 
@@ -114,15 +115,15 @@ public class LiquidSimulator : JobComponentSystem
             {   //Set to completely Empty
                 next[index] = new CellComponent
                 {
-                    CellType = current[index].CellType,
+                    Solid = current[index].Solid,
                     SpriteSheetFrame = 0, //Empty Sprite
-                    uv = current[index].uv,
-                    matrix = current[index].matrix,
+                    UV = current[index].UV,
+                    Matrix = current[index].Matrix,
                     CellSize = current[index].CellSize,
                     xGrid = current[index].xGrid,
                     yGrid = current[index].yGrid,
                     index = current[index].index,
-                    worldPos = current[index].worldPos,
+                    WorldPos = current[index].WorldPos,
                     Settled = current[index].Settled,
                     SettleCount = current[index].SettleCount,
                     Liquid = 0,
@@ -151,7 +152,7 @@ public class LiquidSimulator : JobComponentSystem
             // Flow to bottom cell
             if (current[index].BottomIndex != -1) //Has bottom neighbor
             {
-                if (current[current[index].BottomIndex].CellType == 0) //Bottom neighbor is not solid
+                if (current[current[index].BottomIndex].Solid == false) //Bottom neighbor is not solid
                 {
                     // Determine rate of flow
                     flow = CalculateVerticalFlowValue(remainingLiquid, current[current[index].BottomIndex].Liquid) - current[current[index].BottomIndex].Liquid;
@@ -180,15 +181,15 @@ public class LiquidSimulator : JobComponentSystem
                 modifySelf -= remainingLiquid;
                 next[index] = new CellComponent
                 {
-                    CellType = current[index].CellType,
+                    Solid = current[index].Solid,
                     SpriteSheetFrame = 0, //Empty
-                    uv = current[index].uv,
-                    matrix = current[index].matrix,
+                    UV = current[index].UV,
+                    Matrix = current[index].Matrix,
                     CellSize = current[index].CellSize,
                     xGrid = current[index].xGrid,
                     yGrid = current[index].yGrid,
                     index = current[index].index,
-                    worldPos = current[index].worldPos,
+                    WorldPos = current[index].WorldPos,
                     Settled = current[index].Settled,
                     SettleCount = current[index].SettleCount,
                     Liquid = current[index].Liquid,
@@ -208,7 +209,7 @@ public class LiquidSimulator : JobComponentSystem
             // Flow to left cell
             if (current[index].LeftIndex != -1)
             {
-                if (current[current[index].LeftIndex].CellType == 0)
+                if (current[current[index].LeftIndex].Solid == false)
                 {
                     // Calculate flow rate
                     flow = (remainingLiquid - current[current[index].LeftIndex].Liquid) / 4f;
@@ -236,15 +237,15 @@ public class LiquidSimulator : JobComponentSystem
                 modifySelf -= remainingLiquid;
                 next[index] = new CellComponent
                 {
-                    CellType = current[index].CellType,
+                    Solid = current[index].Solid,
                     SpriteSheetFrame = 0, //Empty
-                    uv = current[index].uv,
-                    matrix = current[index].matrix,
+                    UV = current[index].UV,
+                    Matrix = current[index].Matrix,
                     CellSize = current[index].CellSize,
                     xGrid = current[index].xGrid,
                     yGrid = current[index].yGrid,
                     index = current[index].index,
-                    worldPos = current[index].worldPos,
+                    WorldPos = current[index].WorldPos,
                     Settled = current[index].Settled,
                     SettleCount = current[index].SettleCount,
                     Liquid = current[index].Liquid,
@@ -264,7 +265,7 @@ public class LiquidSimulator : JobComponentSystem
             //Flow to Right
             if (current[index].RightIndex != -1)
             {
-                if (current[current[index].RightIndex].CellType == 0)
+                if (current[current[index].RightIndex].Solid == false)
                 {
 
                     // calc flow rate
@@ -293,15 +294,15 @@ public class LiquidSimulator : JobComponentSystem
                 modifySelf -= remainingLiquid;
                 next[index] = new CellComponent
                 {
-                    CellType = current[index].CellType,
+                    Solid = current[index].Solid,
                     SpriteSheetFrame = 0, //Empty
-                    uv = current[index].uv,
-                    matrix = current[index].matrix,
+                    UV = current[index].UV,
+                    Matrix = current[index].Matrix,
                     CellSize = current[index].CellSize,
                     xGrid = current[index].xGrid,
                     yGrid = current[index].yGrid,
                     index = current[index].index,
-                    worldPos = current[index].worldPos,
+                    WorldPos = current[index].WorldPos,
                     Settled = current[index].Settled,
                     SettleCount = current[index].SettleCount,
                     Liquid = current[index].Liquid,
@@ -322,7 +323,7 @@ public class LiquidSimulator : JobComponentSystem
             //Flow to Top Cell
             if (current[index].TopIndex != -1)
             {
-                if (current[current[index].TopIndex].CellType == 0)
+                if (current[current[index].TopIndex].Solid == false)
                 {
 
                     flow = remainingLiquid - CalculateVerticalFlowValue(remainingLiquid, current[current[index].TopIndex].Liquid);
@@ -351,15 +352,15 @@ public class LiquidSimulator : JobComponentSystem
                 modifySelf -= remainingLiquid;
                 next[index] = new CellComponent
                 {
-                    CellType = current[index].CellType,
+                    Solid = current[index].Solid,
                     SpriteSheetFrame = 0, //Empty
-                    uv = current[index].uv,
-                    matrix = current[index].matrix,
+                    UV = current[index].UV,
+                    Matrix = current[index].Matrix,
                     CellSize = current[index].CellSize,
                     xGrid = current[index].xGrid,
                     yGrid = current[index].yGrid,
                     index = current[index].index,
-                    worldPos = current[index].worldPos,
+                    WorldPos = current[index].WorldPos,
                     Settled = current[index].Settled,
                     SettleCount = current[index].SettleCount,
                     Liquid = current[index].Liquid,
@@ -379,15 +380,15 @@ public class LiquidSimulator : JobComponentSystem
             //Update Cell Changes
             next[index] = new CellComponent
             {
-                CellType = current[index].CellType,
+                Solid = current[index].Solid,
                 SpriteSheetFrame = 1, //Water
-                uv = current[index].uv,
-                matrix = current[index].matrix,
+                UV = current[index].UV,
+                Matrix = current[index].Matrix,
                 CellSize = current[index].CellSize,
                 xGrid = current[index].xGrid,
                 yGrid = current[index].yGrid,
                 index = current[index].index,
-                worldPos = current[index].worldPos,
+                WorldPos = current[index].WorldPos,
                 Settled = current[index].Settled,
                 SettleCount = current[index].SettleCount,
                 Liquid = current[index].Liquid,
@@ -439,8 +440,7 @@ public class LiquidSimulator : JobComponentSystem
 
         public void Execute(int index)
         {
-
-            if (current[index].CellType != 0) { return; } //Is Solid
+            if (current[index].Solid) { return; } //Is Solid
 
             float modifiedLiquid = current[index].Liquid;
             int SettleCount = current[index].SettleCount;
@@ -498,16 +498,16 @@ public class LiquidSimulator : JobComponentSystem
             //Assign all new values
             next[index] = new CellComponent
             {
-                CellType = current[index].CellType,
+                Solid = current[index].Solid,
                 SpriteSheetFrame = current[index].SpriteSheetFrame,
-                uv = current[index].uv,
-                matrix = current[index].matrix,
-                isDownFlowingLiquid = isDownFlowing,
+                UV = current[index].UV,
+                Matrix = current[index].Matrix,
+                IsDownFlowingLiquid = isDownFlowing,
                 CellSize = current[index].CellSize,
                 xGrid = current[index].xGrid,
                 yGrid = current[index].yGrid,
                 index = current[index].index,
-                worldPos = current[index].worldPos,
+                WorldPos = current[index].WorldPos,
                 Settled = Settled, //
                 SettleCount = SettleCount, //
                 Liquid = modifiedLiquid, //

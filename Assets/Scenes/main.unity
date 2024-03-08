@@ -152,10 +152,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   GridWidth: 80
   GridHeight: 40
-  liquidPerClick: 5
-  CellSize: 1
-  quadMesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+  QuadMesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
   SpriteSheetMat: {fileID: 2100000, guid: dbed33f450077dd4ebe77b0f0a62536c, type: 2}
+  _liquidPerClick: 5
+  _gravity: 0
+  _cellSize: 1
 --- !u!4 &1379555689
 Transform:
   m_ObjectHideFlags: 0
@@ -213,7 +214,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1665349187}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6a160d838ff8b4b4693ac20007e008c7, type: 3}
   m_Name: 
