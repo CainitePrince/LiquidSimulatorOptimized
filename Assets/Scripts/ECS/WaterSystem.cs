@@ -177,7 +177,8 @@ public class LiquidSimulator : JobComponentSystem
 
             // Check to ensure we still have liquid in this cell
             if (remainingLiquid < MinLiquid)
-            { //Not enough Liquid
+            { 
+                //Not enough Liquid
                 modifySelf -= remainingLiquid;
                 next[index] = new CellComponent
                 {

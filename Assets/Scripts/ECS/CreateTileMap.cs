@@ -10,9 +10,11 @@ using Unity.Mathematics;
 public enum GravityEnum
 {
     Down,
+    DownLeft,
     Up,
     Left,
-    Right
+    Right,
+
 }
 
 /// <summary>
@@ -91,7 +93,8 @@ public class CreateTileMap : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
         {
             if ((x > 0 && x < GridWidth) && (y > 0 && y < GridHeight))
-            {  //Click is inside grid, grab cell component data
+            {  
+                //Click is inside grid, grab cell component data
                 _clickedCell = _entityManager.GetComponentData<CellComponent>(_cells[CalculateCellIndex(x, y, GridWidth)]);
                 if (!_clickedCell.Solid)
                 {
@@ -134,7 +137,7 @@ public class CreateTileMap : MonoBehaviour
         if (Input.GetMouseButton(1))
         {
             _clickedCell = _entityManager.GetComponentData<CellComponent>(_cells[CalculateCellIndex(x, y, GridWidth)]);
-            if ((x > 0 && x < GridWidth) && (y > 0 && y < GridHeight))
+            if ((x > 0 && x < GridWidth - 1) && (y > 0 && y < GridHeight - 1))
             {
                 _clickedCell.Solid = false;
                 _clickedCell.Liquid = _liquidPerClick;
@@ -150,6 +153,9 @@ public class CreateTileMap : MonoBehaviour
         {
             case GravityEnum.Down:
                 return new Vector2(0.0f, 1.0f);
+
+            case GravityEnum.DownLeft:
+                return new Vector2(-1.0f, 1.0f);
 
             case GravityEnum.Left:
                 return new Vector2(-1.0f, 0.0f);
