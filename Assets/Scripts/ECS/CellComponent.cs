@@ -31,13 +31,21 @@ public struct CellComponent : IComponentData
     public int TopIndex;
     public int LeftIndex;
     public int RightIndex;
+    public int BottomLeftIndex;
+    public int TopLeftIndex;
+    public int TopRightIndex;
+    public int BottomRightIndex;
 
     //Values stored for modifying self and neighbor
-    public float modifySelf;
-    public float modifyBottom;
-    public float modifyTop;
-    public float modifyLeft;
-    public float modifyRight;
+    public float ModifySelf;
+    public float ModifyBottom;
+    public float ModifyTop;
+    public float ModifyLeft;
+    public float ModifyRight;
+    public float ModifyBottomLeft;
+    //public float ModifyUpLeft;
+    //public float ModifyUpRight;
+    public float ModifyBottomRight;
 
     //Empty(0) or Solid(1)
     public bool Solid;
