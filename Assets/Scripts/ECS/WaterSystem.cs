@@ -114,7 +114,7 @@ public class LiquidSimulator : JobComponentSystem
                 next[index] = new CellComponent
                 {
                     Solid = current[index].Solid,
-                    SpriteSheetFrame = 0, //Empty Sprite
+                    //SpriteSheetFrame = 0, //Empty Sprite
                     UV = current[index].UV,
                     Matrix = current[index].Matrix,
                     CellSize = current[index].CellSize,
@@ -192,7 +192,7 @@ public class LiquidSimulator : JobComponentSystem
                 next[index] = new CellComponent
                 {
                     Solid = current[index].Solid,
-                    SpriteSheetFrame = 0, //Empty
+                    //SpriteSheetFrame = 0, //Empty
                     UV = current[index].UV,
                     Matrix = current[index].Matrix,
                     CellSize = current[index].CellSize,
@@ -233,6 +233,9 @@ public class LiquidSimulator : JobComponentSystem
                 {
                     // Determine rate of flow
                     flow = CalculateVerticalFlowValue(remainingLiquid, current[current[index].BottomLeftIndex].Liquid) - current[current[index].BottomLeftIndex].Liquid;
+
+                    flow *= 0.5f;
+
                     if (current[current[index].BottomLeftIndex].Liquid > 0 && flow > MinFlow)
                         flow *= FlowSpeed;
 
@@ -259,7 +262,7 @@ public class LiquidSimulator : JobComponentSystem
                 next[index] = new CellComponent
                 {
                     Solid = current[index].Solid,
-                    SpriteSheetFrame = 0, //Empty
+                    //SpriteSheetFrame = 0, //Empty
                     UV = current[index].UV,
                     Matrix = current[index].Matrix,
                     CellSize = current[index].CellSize,
@@ -299,6 +302,9 @@ public class LiquidSimulator : JobComponentSystem
                 {
                     // Determine rate of flow
                     flow = CalculateVerticalFlowValue(remainingLiquid, current[current[index].BottomRightIndex].Liquid) - current[current[index].BottomRightIndex].Liquid;
+
+                    flow *= 0.5f;
+
                     if (current[current[index].BottomRightIndex].Liquid > 0 && flow > MinFlow)
                         flow *= FlowSpeed;
 
@@ -325,7 +331,7 @@ public class LiquidSimulator : JobComponentSystem
                 next[index] = new CellComponent
                 {
                     Solid = current[index].Solid,
-                    SpriteSheetFrame = 0, //Empty
+                    //SpriteSheetFrame = 0, //Empty
                     UV = current[index].UV,
                     Matrix = current[index].Matrix,
                     CellSize = current[index].CellSize,
@@ -389,7 +395,7 @@ public class LiquidSimulator : JobComponentSystem
                 next[index] = new CellComponent
                 {
                     Solid = current[index].Solid,
-                    SpriteSheetFrame = 0, //Empty
+                    //SpriteSheetFrame = 0, //Empty
                     UV = current[index].UV,
                     Matrix = current[index].Matrix,
                     CellSize = current[index].CellSize,
@@ -454,7 +460,7 @@ public class LiquidSimulator : JobComponentSystem
                 next[index] = new CellComponent
                 {
                     Solid = current[index].Solid,
-                    SpriteSheetFrame = 0, //Empty
+                    //SpriteSheetFrame = 0, //Empty
                     UV = current[index].UV,
                     Matrix = current[index].Matrix,
                     CellSize = current[index].CellSize,
@@ -552,7 +558,7 @@ public class LiquidSimulator : JobComponentSystem
             next[index] = new CellComponent
             {
                 Solid = current[index].Solid,
-                SpriteSheetFrame = 1, //Water
+                //SpriteSheetFrame = 1, //Water
                 UV = current[index].UV,
                 Matrix = current[index].Matrix,
                 CellSize = current[index].CellSize,
@@ -682,7 +688,7 @@ public class LiquidSimulator : JobComponentSystem
             next[index] = new CellComponent
             {
                 Solid = current[index].Solid,
-                SpriteSheetFrame = current[index].SpriteSheetFrame,
+                //SpriteSheetFrame = current[index].SpriteSheetFrame,
                 UV = current[index].UV,
                 Matrix = current[index].Matrix,
                 IsDownFlowingLiquid = isDownFlowing,

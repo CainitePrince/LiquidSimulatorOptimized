@@ -11,7 +11,7 @@ public struct CellComponent : IComponentData
 
     //Rendering Data
     //0 = Empty //1 = Water //2 == Wall
-    public int SpriteSheetFrame;
+    //public int SpriteSheetFrame;
 
     //CellSize
     public float CellSize;

@@ -1,15 +1,62 @@
 ﻿using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
+using UnityEngine;
 
 public class SpriteSheetCalculationsJob : SystemBase//JobComponentSystem
-{
-    protected override /*JobHandle*/ void OnUpdate(/*JobHandle inputDeps*/)
+{ 
+    protected override void OnUpdate()
+    {
+        Vector2 gravity = CreateTileMap.GetInstance().GetGravityVector(out bool isDiagonal);
+        gravity.Normalize();
+
+        Vector2 defaultGravity = new Vector2(0.0f, 1.0f);
+
+        float dot = Vector2.Dot(gravity, defaultGravity);
+        float det = gravity.x * defaultGravity.y - gravity.y * defaultGravity.x;
+
+        float angle = Mathf.Atan2(det, dot);
+
+        CreateTileMap.GetInstance().WaterMaterial.SetFloat("_Ratio", isDiagonal ? 1.414f : 1.0f);
+
+        Entities.ForEach((ref CellComponent cell) => 
+        {
+            /*
+            // Offset is 1 for empty cell.
+            float offsetV = 1.0f;
+
+            // Offset moves to zero when full
+            if (cell.Liquid > 0.05f)
+            {
+                offsetV = Mathf.Clamp(1.0f - cell.Liquid, 0.0f, 1.0f);
+            }
+
+            if (cell.Solid)
+            {
+                offsetV = -2.0f;
+            }
+
+            if (cell.IsDownFlowingLiquid)
+            {
+                offsetV = 0.0f;
+            }
+            */
+            //float angle = Mathf.PI;
+            cell.UV = new UnityEngine.Vector4(cell.Solid? 2.0f : cell.IsDownFlowingLiquid? 1.0f : Mathf.Clamp01(cell.Liquid), angle, 0.0f, 0.0f);
+
+            cell.Matrix = UnityEngine.Matrix4x4.TRS(
+                new UnityEngine.Vector3(cell.WorldPos.x, cell.WorldPos.y, 0),
+                Quaternion.identity,
+                new UnityEngine.Vector3(cell.CellSize, cell.CellSize, 0));
+        }).Schedule();
+    }
+    /*
+    protected override void OnUpdate()
     {
         UnityEngine.Vector2 gravity = CreateTileMap.GetInstance().GetGravityVector();
         UnityEngine.Quaternion waterRotation = UnityEngine.Quaternion.LookRotation(new UnityEngine.Vector3(0, 0, 1), new UnityEngine.Vector3(-gravity.x, gravity.y, 0.0f));
 
-        /*JobHandle jobHandle =*/ Entities.ForEach((ref CellComponent cell) =>
+        Entities.ForEach((ref CellComponent cell) =>
         {
             float uvWidth = 1f / 3;
             float uvHeight = 1f;
@@ -46,12 +93,13 @@ public class SpriteSheetCalculationsJob : SystemBase//JobComponentSystem
 
             cell.Matrix = UnityEngine.Matrix4x4.TRS(
                 new UnityEngine.Vector3(cell.WorldPos.x, cell.WorldPos.y, 0),
-                /*UnityEngine.Quaternion.identity*/rotation,
+                rotation,
                 new UnityEngine.Vector3(cell.CellSize, cell.CellSize, 0));
 
-        }).Schedule(/*inputDeps*/);
+        }).Schedule();
 
         //return jobHandle;
     }
+    */
 
 }

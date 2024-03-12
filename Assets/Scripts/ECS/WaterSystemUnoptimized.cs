@@ -60,7 +60,7 @@ public class WaterSystemUnoptimized
             next[index] = new CellComponent
             {
                 Solid = current[index].Solid,
-                SpriteSheetFrame = 0, //Empty Sprite
+                //SpriteSheetFrame = 0, //Empty Sprite
                 UV = current[index].UV,
                 Matrix = current[index].Matrix,
                 CellSize = current[index].CellSize,
@@ -205,7 +205,7 @@ public class WaterSystemUnoptimized
             next[index] = new CellComponent
             {
                 Solid = current[index].Solid,
-                SpriteSheetFrame = 0, //Empty
+                //SpriteSheetFrame = 0, //Empty
                 UV = current[index].UV,
                 Matrix = current[index].Matrix,
                 CellSize = current[index].CellSize,
@@ -271,7 +271,7 @@ public class WaterSystemUnoptimized
             next[index] = new CellComponent
             {
                 Solid = current[index].Solid,
-                SpriteSheetFrame = 0, //Empty
+                //SpriteSheetFrame = 0, //Empty
                 UV = current[index].UV,
                 Matrix = current[index].Matrix,
                 CellSize = current[index].CellSize,
@@ -335,7 +335,7 @@ public class WaterSystemUnoptimized
             next[index] = new CellComponent
             {
                 Solid = current[index].Solid,
-                SpriteSheetFrame = 0, //Empty
+                //SpriteSheetFrame = 0, //Empty
                 UV = current[index].UV,
                 Matrix = current[index].Matrix,
                 CellSize = current[index].CellSize,
@@ -400,7 +400,7 @@ public class WaterSystemUnoptimized
             next[index] = new CellComponent
             {
                 Solid = current[index].Solid,
-                SpriteSheetFrame = 0, //Empty
+                //SpriteSheetFrame = 0, //Empty
                 UV = current[index].UV,
                 Matrix = current[index].Matrix,
                 CellSize = current[index].CellSize,
@@ -466,7 +466,7 @@ public class WaterSystemUnoptimized
             next[index] = new CellComponent
             {
                 Solid = current[index].Solid,
-                SpriteSheetFrame = 0, //Empty
+                //SpriteSheetFrame = 0, //Empty
                 UV = current[index].UV,
                 Matrix = current[index].Matrix,
                 CellSize = current[index].CellSize,
@@ -498,7 +498,7 @@ public class WaterSystemUnoptimized
         next[index] = new CellComponent
         {
             Solid = current[index].Solid,
-            SpriteSheetFrame = 1, //Water
+            //SpriteSheetFrame = 1, //Water
             UV = current[index].UV,
             Matrix = current[index].Matrix,
             CellSize = current[index].CellSize,
@@ -596,7 +596,7 @@ public class WaterSystemUnoptimized
         next[index] = new CellComponent
         {
             Solid = current[index].Solid,
-            SpriteSheetFrame = current[index].SpriteSheetFrame,
+           // SpriteSheetFrame = current[index].SpriteSheetFrame,
             UV = current[index].UV,
             Matrix = current[index].Matrix,
             IsDownFlowingLiquid = isDownFlowing,

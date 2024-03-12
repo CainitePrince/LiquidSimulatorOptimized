@@ -27,7 +27,7 @@ public class CreateTileMap : MonoBehaviour
     public int GridWidth = 80;
     public int GridHeight = 40;
     public Mesh QuadMesh;
-    public Material SpriteSheetMat;
+    public Material WaterMaterial;
 
     [SerializeField] private int _liquidPerClick = 5; //Liquid placed when clicked
     [SerializeField] private GravityEnum _gravity = GravityEnum.Down;
@@ -120,7 +120,7 @@ public class CreateTileMap : MonoBehaviour
                     if (_fill)
                     {
                         _clickedCell.Solid = true;
-                        _clickedCell.SpriteSheetFrame = 2;
+                        //_clickedCell.SpriteSheetFrame = 2;
                         _clickedCell.Liquid = 0;
                         _entityManager.SetComponentData(_cells[CalculateCellIndex(x, y)], _clickedCell);
                     }
@@ -128,7 +128,7 @@ public class CreateTileMap : MonoBehaviour
                     {
                         _clickedCell.Solid = false;
                         _clickedCell.Liquid = 0;
-                        _clickedCell.SpriteSheetFrame = 0;
+                        //_clickedCell.SpriteSheetFrame = 0;
                         _entityManager.SetComponentData(_cells[CalculateCellIndex(x, y)], _clickedCell);
                     }
                 }
@@ -143,38 +143,46 @@ public class CreateTileMap : MonoBehaviour
             {
                 _clickedCell.Solid = false;
                 _clickedCell.Liquid = _liquidPerClick;
-                _clickedCell.SpriteSheetFrame = 1;
+                //_clickedCell.SpriteSheetFrame = 1;
                 _entityManager.SetComponentData(_cells[CalculateCellIndex(x, y)], _clickedCell);
             }
         }
     }
 
-    public Vector2 GetGravityVector()
+    public Vector2 GetGravityVector(out bool isDiagonal)
     {
         switch (_gravity)
         {
             case GravityEnum.Down:
+                isDiagonal = false;
                 return new Vector2(0.0f, 1.0f);
 
             case GravityEnum.Left:
+                isDiagonal = false;
                 return new Vector2(-1.0f, 0.0f);
 
             case GravityEnum.Right:
+                isDiagonal = false;
                 return new Vector2(1.0f, 0.0f);
 
             case GravityEnum.Up:
+                isDiagonal = false;
                 return new Vector2(0.0f, -1.0f);
 
             case GravityEnum.DownLeft:
+                isDiagonal = true;
                 return new Vector2(-1.0f, 1.0f);
 
             case GravityEnum.UpLeft:
+                isDiagonal = true;
                 return new Vector2(-1.0f, -1.0f);
 
             case GravityEnum.UpRight:
+                isDiagonal = true;
                 return new Vector2(1.0f, -1.0f);
 
             case GravityEnum.DownRight:
+                isDiagonal = true;
                 return new Vector2(1.0f, 1.0f);
 
             default:
@@ -194,7 +202,7 @@ public class CreateTileMap : MonoBehaviour
 
     private void DebugCode()
     {
-        Vector2 gravity = GetGravityVector();
+        Vector2 gravity = GetGravityVector(out var _);
 
         Vector3 bottom = Vector3.Normalize(new Vector3(gravity.x, gravity.y, 0.0f));
         Vector3 left = -Vector3.Cross(bottom, new Vector3(0.0f, 0.0f, 1.0f));
@@ -266,7 +274,7 @@ public class CreateTileMap : MonoBehaviour
                     xGrid = x,
                     yGrid = y,
                     Solid = isWall, //Solid
-                    SpriteSheetFrame = isWall ? 2 : 0, //Wall Frame
+                    //SpriteSheetFrame = isWall ? 2 : 0, //Wall Frame
                     //WorldPos = new float2(xpos, ypos),
                     CellSize = _cellSize,
                     Liquid = 0f,
@@ -306,7 +314,7 @@ public class CreateTileMap : MonoBehaviour
     {
         //DebugCode();
 
-        Vector2 gravity = GetGravityVector();
+        Vector2 gravity = GetGravityVector(out var _);
         
         Vector3 bottom = Vector3.Normalize(new Vector3(gravity.x, gravity.y, 0.0f));
         Vector3 left = -Vector3.Cross(bottom, new Vector3(0.0f, 0.0f, 1.0f));
@@ -378,7 +386,7 @@ public class CreateTileMap : MonoBehaviour
                         xGrid = x,
                         yGrid = y,
                         Solid = isWall, //Solid
-                        SpriteSheetFrame = isWall? 2 : 0, //Wall Frame
+                        //SpriteSheetFrame = isWall? 2 : 0, //Wall Frame
                         WorldPos = new float2(xpos, ypos),
                         CellSize = _cellSize,
                         Liquid = 0f,
