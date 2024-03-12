@@ -2,10 +2,7 @@
 using Unity.Collections;
 using Unity.Jobs;
 using Unity.Burst;
-using Unity.Entities.UniversalDelegates;
 using UnityEngine;
-using Unity.Mathematics;
-using Unity.Transforms;
 
 public class LiquidSimulator : JobComponentSystem
 {
@@ -19,7 +16,7 @@ public class LiquidSimulator : JobComponentSystem
         entityQuery = GetEntityQuery(ComponentType.ReadOnly<CellComponent>());
 
         //Create Readable Current Array
-        var current = entityQuery.ToComponentDataArray<CellComponent>(Allocator.TempJob);
+        NativeArray<CellComponent> current = entityQuery.ToComponentDataArray<CellComponent>(Allocator.TempJob);
 
         //Create Writable next(Future) Array
         var next = new NativeArray<CellComponent>(current.Length, Allocator.TempJob);
@@ -56,7 +53,7 @@ public class LiquidSimulator : JobComponentSystem
             MaxFlow = MaxFlow,
             FlowSpeed = FlowSpeed,
             GridWidth = GridWidth,
-            deltaTime = Time.DeltaTime //Delta Time is applied to Flow
+            //deltaTime = Time.DeltaTime //Delta Time is applied to Flow
         }.Schedule(current.Length, 32);
 
         //Complete Physics Job
@@ -86,7 +83,8 @@ public class LiquidSimulator : JobComponentSystem
 
     [BurstCompile]
     private struct CalculateWaterPhysics : IJobParallelFor
-    { //Calculate water physics and then save them in the next array
+    { 
+        //Calculate water physics and then save them in the next array
 
         [ReadOnly]
         public NativeArray<CellComponent> current;
@@ -96,7 +94,7 @@ public class LiquidSimulator : JobComponentSystem
 
         public float MaxLiquid;
         public float MinLiquid;
-        public float deltaTime;
+        //public float deltaTime;
         public float MaxCompression;
         public float MinFlow;
         public float MaxFlow;
@@ -105,18 +103,18 @@ public class LiquidSimulator : JobComponentSystem
 
         public void Execute(int index)
         {
-
             // Validate cell
             if (current[index].Solid) { return; } //Is Solid
             if (current[index].Liquid == 0) { return; } //Empty
             if (current[index].Settled) { return; } //Settled
 
             if (current[index].Liquid < MinLiquid) //Not enough Water
-            {   //Set to completely Empty
+            {   
+                //Set to completely Empty
                 next[index] = new CellComponent
                 {
                     Solid = current[index].Solid,
-                    SpriteSheetFrame = 0, //Empty Sprite
+                    //SpriteSheetFrame = 0, //Empty Sprite
                     UV = current[index].UV,
                     Matrix = current[index].Matrix,
                     CellSize = current[index].CellSize,
@@ -131,11 +129,19 @@ public class LiquidSimulator : JobComponentSystem
                     TopIndex = current[index].TopIndex,
                     LeftIndex = current[index].LeftIndex,
                     RightIndex = current[index].RightIndex,
-                    modifySelf = 0,
-                    modifyBottom = 0,
-                    modifyTop = 0,
-                    modifyLeft = 0,
-                    modifyRight = 0
+                    BottomLeftIndex = current[index].BottomLeftIndex,
+                    TopLeftIndex = current[index].TopLeftIndex,
+                    TopRightIndex = current[index].TopRightIndex,
+                    BottomRightIndex = current[index].BottomRightIndex,
+                    ModifySelf = 0,
+                    ModifyBottom = 0,
+                    //ModifyTop = 0,
+                    ModifyLeft = 0,
+                    ModifyRight = 0,
+                    ModifyBottomLeft = 0,
+                    //ModifyUpLeft = 0,
+                    //ModifyUpRight = 0,
+                    ModifyBottomRight = 0
                 };
                 return;
             }
@@ -148,7 +154,11 @@ public class LiquidSimulator : JobComponentSystem
             float modifyTop = 0;
             float modifyLeft = 0;
             float modifyRight = 0;
-
+            float modifyBottomLeft = 0;
+            float modifyTopLeft = 0;
+            float modifyTopRight = 0;
+            float modifyBottomRight = 0;
+            
             // Flow to bottom cell
             if (current[index].BottomIndex != -1) //Has bottom neighbor
             {
@@ -172,7 +182,6 @@ public class LiquidSimulator : JobComponentSystem
                         modifyBottom += flow;
                     }
                 }
-
             }
 
             // Check to ensure we still have liquid in this cell
@@ -183,7 +192,7 @@ public class LiquidSimulator : JobComponentSystem
                 next[index] = new CellComponent
                 {
                     Solid = current[index].Solid,
-                    SpriteSheetFrame = 0, //Empty
+                    //SpriteSheetFrame = 0, //Empty
                     UV = current[index].UV,
                     Matrix = current[index].Matrix,
                     CellSize = current[index].CellSize,
@@ -198,15 +207,162 @@ public class LiquidSimulator : JobComponentSystem
                     TopIndex = current[index].TopIndex,
                     LeftIndex = current[index].LeftIndex,
                     RightIndex = current[index].RightIndex,
-                    modifySelf = modifySelf,
-                    modifyBottom = modifyBottom,
-                    modifyTop = modifyTop,
-                    modifyLeft = modifyLeft,
-                    modifyRight = modifyRight
+                    BottomLeftIndex = current[index].BottomLeftIndex,
+                    TopLeftIndex = current[index].TopLeftIndex,
+                    TopRightIndex = current[index].TopRightIndex,
+                    BottomRightIndex = current[index].BottomRightIndex,
+                    ModifySelf = modifySelf,
+                    ModifyBottom = modifyBottom,
+                    ModifyTop = modifyTop,
+                    ModifyLeft = modifyLeft,
+                    ModifyRight = modifyRight,
+                    ModifyBottomLeft = modifyBottomLeft,
+                    //ModifyUpLeft = modifyTopLeft,
+                    //ModifyUpRight = modifyTopRight,
+                    ModifyBottomRight = modifyBottomRight
                 };
                 return;
             }
+            
+            // Flow to bottom left
+            if (current[index].BottomLeftIndex != -1) //Has bottom left neighbor
+            {
+                //Debug.Log($"{index}");
 
+                if (current[current[index].BottomLeftIndex].Solid == false) //Bottom left neighbor is not solid
+                {
+                    // Determine rate of flow
+                    flow = CalculateVerticalFlowValue(remainingLiquid, current[current[index].BottomLeftIndex].Liquid) - current[current[index].BottomLeftIndex].Liquid;
+
+                    flow *= 0.5f;
+
+                    if (current[current[index].BottomLeftIndex].Liquid > 0 && flow > MinFlow)
+                        flow *= FlowSpeed;
+
+                    // Constrain flow
+                    flow = Mathf.Max(flow, 0);
+                    if (flow > Mathf.Min(MaxFlow, current[index].Liquid))
+                        flow = Mathf.Min(MaxFlow, current[index].Liquid);
+
+                    // Update temp values
+                    if (flow != 0)
+                    {
+                        remainingLiquid -= flow;
+                        modifySelf -= flow;
+                        modifyBottomLeft += flow;
+                    }
+                }
+            }
+
+            // Check to ensure we still have liquid in this cell
+            if (remainingLiquid < MinLiquid)
+            {
+                //Not enough Liquid
+                modifySelf -= remainingLiquid;
+                next[index] = new CellComponent
+                {
+                    Solid = current[index].Solid,
+                    //SpriteSheetFrame = 0, //Empty
+                    UV = current[index].UV,
+                    Matrix = current[index].Matrix,
+                    CellSize = current[index].CellSize,
+                    xGrid = current[index].xGrid,
+                    yGrid = current[index].yGrid,
+                    index = current[index].index,
+                    WorldPos = current[index].WorldPos,
+                    Settled = current[index].Settled,
+                    SettleCount = current[index].SettleCount,
+                    Liquid = current[index].Liquid,
+                    BottomIndex = current[index].BottomIndex,
+                    TopIndex = current[index].TopIndex,
+                    LeftIndex = current[index].LeftIndex,
+                    RightIndex = current[index].RightIndex,
+                    BottomLeftIndex = current[index].BottomLeftIndex,
+                    TopLeftIndex = current[index].TopLeftIndex,
+                    TopRightIndex = current[index].TopRightIndex,
+                    BottomRightIndex = current[index].BottomRightIndex,
+                    ModifySelf = modifySelf,
+                    ModifyBottom = modifyBottom,
+                    //ModifyTop = modifyTop,
+                    ModifyLeft = modifyLeft,
+                    ModifyRight = modifyRight,
+                    ModifyBottomLeft = modifyBottomLeft,
+                    //ModifyUpLeft = modifyTopLeft,
+                    //ModifyUpRight = modifyTopRight,
+                    ModifyBottomRight = modifyBottomRight
+                };
+                return;
+            }
+            
+
+            // Flow to bottom right
+            if (current[index].BottomRightIndex != -1) //Has bottom left neighbor
+            {
+                if (current[current[index].BottomRightIndex].Solid == false) //Bottom left neighbor is not solid
+                {
+                    // Determine rate of flow
+                    flow = CalculateVerticalFlowValue(remainingLiquid, current[current[index].BottomRightIndex].Liquid) - current[current[index].BottomRightIndex].Liquid;
+
+                    flow *= 0.5f;
+
+                    if (current[current[index].BottomRightIndex].Liquid > 0 && flow > MinFlow)
+                        flow *= FlowSpeed;
+
+                    // Constrain flow
+                    flow = Mathf.Max(flow, 0);
+                    if (flow > Mathf.Min(MaxFlow, current[index].Liquid))
+                        flow = Mathf.Min(MaxFlow, current[index].Liquid);
+
+                    // Update temp values
+                    if (flow != 0)
+                    {
+                        remainingLiquid -= flow;
+                        modifySelf -= flow;
+                        modifyBottomRight += flow;
+                    }
+                }
+            }
+
+            // Check to ensure we still have liquid in this cell
+            if (remainingLiquid < MinLiquid)
+            {
+                //Not enough Liquid
+                modifySelf -= remainingLiquid;
+                next[index] = new CellComponent
+                {
+                    Solid = current[index].Solid,
+                    //SpriteSheetFrame = 0, //Empty
+                    UV = current[index].UV,
+                    Matrix = current[index].Matrix,
+                    CellSize = current[index].CellSize,
+                    xGrid = current[index].xGrid,
+                    yGrid = current[index].yGrid,
+                    index = current[index].index,
+                    WorldPos = current[index].WorldPos,
+                    Settled = current[index].Settled,
+                    SettleCount = current[index].SettleCount,
+                    Liquid = current[index].Liquid,
+                    BottomIndex = current[index].BottomIndex,
+                    TopIndex = current[index].TopIndex,
+                    LeftIndex = current[index].LeftIndex,
+                    RightIndex = current[index].RightIndex,
+                    BottomLeftIndex = current[index].BottomLeftIndex,
+                    TopLeftIndex = current[index].TopLeftIndex,
+                    TopRightIndex = current[index].TopRightIndex,
+                    BottomRightIndex = current[index].BottomRightIndex,
+                    ModifySelf = modifySelf,
+                    ModifyBottom = modifyBottom,
+                    //ModifyTop = modifyTop,
+                    ModifyLeft = modifyLeft,
+                    ModifyRight = modifyRight,
+                    ModifyBottomLeft = modifyBottomLeft,
+                    //ModifyUpLeft = modifyTopLeft,
+                    //ModifyUpRight = modifyTopRight,
+                    ModifyBottomRight = modifyBottomRight
+                };
+                return;
+            }
+            
             // Flow to left cell
             if (current[index].LeftIndex != -1)
             {
@@ -239,7 +395,7 @@ public class LiquidSimulator : JobComponentSystem
                 next[index] = new CellComponent
                 {
                     Solid = current[index].Solid,
-                    SpriteSheetFrame = 0, //Empty
+                    //SpriteSheetFrame = 0, //Empty
                     UV = current[index].UV,
                     Matrix = current[index].Matrix,
                     CellSize = current[index].CellSize,
@@ -254,11 +410,19 @@ public class LiquidSimulator : JobComponentSystem
                     TopIndex = current[index].TopIndex,
                     LeftIndex = current[index].LeftIndex,
                     RightIndex = current[index].RightIndex,
-                    modifySelf = modifySelf,
-                    modifyBottom = modifyBottom,
-                    modifyTop = modifyTop,
-                    modifyLeft = modifyLeft,
-                    modifyRight = modifyRight
+                    BottomLeftIndex = current[index].BottomLeftIndex,
+                    TopLeftIndex = current[index].TopLeftIndex,
+                    TopRightIndex = current[index].TopRightIndex,
+                    BottomRightIndex = current[index].BottomRightIndex,
+                    ModifySelf = modifySelf,
+                    ModifyBottom = modifyBottom,
+                    ModifyTop = modifyTop,
+                    ModifyLeft = modifyLeft,
+                    ModifyRight = modifyRight,
+                    ModifyBottomLeft = modifyBottomLeft,
+                    //ModifyUpLeft = modifyTopLeft,
+                    //ModifyUpRight = modifyTopRight,
+                    ModifyBottomRight = modifyBottomRight
                 };
                 return;
             }
@@ -296,7 +460,7 @@ public class LiquidSimulator : JobComponentSystem
                 next[index] = new CellComponent
                 {
                     Solid = current[index].Solid,
-                    SpriteSheetFrame = 0, //Empty
+                    //SpriteSheetFrame = 0, //Empty
                     UV = current[index].UV,
                     Matrix = current[index].Matrix,
                     CellSize = current[index].CellSize,
@@ -311,16 +475,24 @@ public class LiquidSimulator : JobComponentSystem
                     TopIndex = current[index].TopIndex,
                     LeftIndex = current[index].LeftIndex,
                     RightIndex = current[index].RightIndex,
-                    modifySelf = modifySelf,
-                    modifyBottom = modifyBottom,
-                    modifyTop = modifyTop,
-                    modifyLeft = modifyLeft,
-                    modifyRight = modifyRight
+                    BottomLeftIndex = current[index].BottomLeftIndex,
+                    TopLeftIndex = current[index].TopLeftIndex,
+                    TopRightIndex = current[index].TopRightIndex,
+                    BottomRightIndex = current[index].BottomRightIndex,
+                    ModifySelf = modifySelf,
+                    ModifyBottom = modifyBottom,
+                    ModifyTop = modifyTop,
+                    ModifyLeft = modifyLeft,
+                    ModifyRight = modifyRight,
+                    ModifyBottomLeft = modifyBottomLeft,
+                    //ModifyUpLeft = modifyTopLeft,
+                    //ModifyUpRight = modifyTopRight,
+                    ModifyBottomRight = modifyBottomRight
                 };
                 return;
             }
 
-
+            /*
             //Flow to Top Cell
             if (current[index].TopIndex != -1)
             {
@@ -345,7 +517,7 @@ public class LiquidSimulator : JobComponentSystem
                     }
                 }
             }
-
+            
 
             // Check to ensure we still have liquid in this cell
             if (remainingLiquid < MinLiquid)
@@ -369,20 +541,24 @@ public class LiquidSimulator : JobComponentSystem
                     TopIndex = current[index].TopIndex,
                     LeftIndex = current[index].LeftIndex,
                     RightIndex = current[index].RightIndex,
-                    modifySelf = modifySelf,
-                    modifyBottom = modifyBottom,
-                    modifyTop = modifyTop,
-                    modifyLeft = modifyLeft,
-                    modifyRight = modifyRight
+                    BottomLeftIndex = current[index].BottomLeftIndex,
+                    TopLeftIndex = current[index].TopLeftIndex,
+                    TopRightIndex = current[index].TopRightIndex,
+                    BottomRightIndex = current[index].BottomRightIndex,
+                    ModifySelf = modifySelf,
+                    ModifyBottom = modifyBottom,
+                    ModifyTop = modifyTop,
+                    ModifyLeft = modifyLeft,
+                    ModifyRight = modifyRight
                 };
                 return;
             }
-
+            */
             //Update Cell Changes
             next[index] = new CellComponent
             {
                 Solid = current[index].Solid,
-                SpriteSheetFrame = 1, //Water
+                //SpriteSheetFrame = 1, //Water
                 UV = current[index].UV,
                 Matrix = current[index].Matrix,
                 CellSize = current[index].CellSize,
@@ -397,13 +573,20 @@ public class LiquidSimulator : JobComponentSystem
                 TopIndex = current[index].TopIndex,
                 LeftIndex = current[index].LeftIndex,
                 RightIndex = current[index].RightIndex,
-                modifySelf = modifySelf,
-                modifyBottom = modifyBottom,
-                modifyTop = modifyTop,
-                modifyLeft = modifyLeft,
-                modifyRight = modifyRight
+                BottomLeftIndex = current[index].BottomLeftIndex,
+                TopLeftIndex = current[index].TopLeftIndex,
+                TopRightIndex = current[index].TopRightIndex,
+                BottomRightIndex = current[index].BottomRightIndex,
+                ModifySelf = modifySelf,
+                ModifyBottom = modifyBottom,
+                ModifyTop = modifyTop,
+                ModifyLeft = modifyLeft,
+                ModifyRight = modifyRight,
+                ModifyBottomLeft = modifyBottomLeft,
+                //ModifyUpLeft = modifyTopLeft,
+                //ModifyUpRight = modifyTopRight,
+                ModifyBottomRight = modifyBottomRight
             };
-
         }
 
         // Calculate how much liquid should flow to destination with pressure
@@ -448,30 +631,35 @@ public class LiquidSimulator : JobComponentSystem
             bool Settled = false;
 
             //Total Cell modifications
-            modifiedLiquid += current[index].modifySelf; //Take self mods
-            if (current[index].TopIndex != -1) //Add top cell's modify bottom
-            {
-                modifiedLiquid += current[current[index].TopIndex].modifyBottom;
-            }
-            if (current[index].BottomIndex != -1) //Add bottom cell's modify top
-            {
-                modifiedLiquid += current[current[index].BottomIndex].modifyTop;
-            }
-            if (current[index].LeftIndex != -1) //Add left cell's modify right
-            {
-                modifiedLiquid += current[current[index].LeftIndex].modifyRight;
-            }
-            if (current[index].RightIndex != -1) //Add right cell's modify left
-            {
-                modifiedLiquid += current[current[index].RightIndex].modifyLeft;
-            }
+            modifiedLiquid += current[index].ModifySelf; //Take self mods
+            //if (current[index].TopIndex != -1) //Add top cell's modify bottom
+            //{
+                modifiedLiquid += current[current[index].TopIndex].ModifyBottom;
+            //}
+            //if (current[index].BottomIndex != -1) //Add bottom cell's modify top
+            //{
+                modifiedLiquid += current[current[index].BottomIndex].ModifyTop;
+            //}
+            //if (current[index].LeftIndex != -1) //Add left cell's modify right
+            //{
+                modifiedLiquid += current[current[index].LeftIndex].ModifyRight;
+            //}
+            //if (current[index].RightIndex != -1) //Add right cell's modify left
+            //{
+                modifiedLiquid += current[current[index].RightIndex].ModifyLeft;
+            //}
+
+            modifiedLiquid += current[current[index].TopLeftIndex].ModifyBottomRight;
+            modifiedLiquid += current[current[index].TopRightIndex].ModifyBottomLeft;
 
             // Check if cell is settled (avoid settling empty cells)
             if (modifiedLiquid == current[index].Liquid && current[index].Liquid != 0)
-            { //No liquid changes increment settle counter
+            { 
+                //No liquid changes increment settle counter
                 SettleCount++;
                 if (SettleCount >= 10)
-                { //Cell has settled
+                { 
+                    //Cell has settled
                     Settled = true;
                 }
             }
@@ -500,7 +688,7 @@ public class LiquidSimulator : JobComponentSystem
             next[index] = new CellComponent
             {
                 Solid = current[index].Solid,
-                SpriteSheetFrame = current[index].SpriteSheetFrame,
+                //SpriteSheetFrame = current[index].SpriteSheetFrame,
                 UV = current[index].UV,
                 Matrix = current[index].Matrix,
                 IsDownFlowingLiquid = isDownFlowing,
@@ -516,13 +704,18 @@ public class LiquidSimulator : JobComponentSystem
                 TopIndex = current[index].TopIndex,
                 LeftIndex = current[index].LeftIndex,
                 RightIndex = current[index].RightIndex,
-                modifySelf = current[index].modifySelf,
-                modifyBottom = current[index].modifyBottom,
-                modifyTop = current[index].modifyTop,
-                modifyLeft = current[index].modifyLeft,
-                modifyRight = current[index].modifyRight
+                BottomLeftIndex = current[index].BottomLeftIndex,
+                TopLeftIndex = current[index].TopLeftIndex,
+                TopRightIndex = current[index].TopRightIndex,
+                BottomRightIndex = current[index].BottomRightIndex,
+                ModifySelf = current[index].ModifySelf,
+                ModifyBottom = current[index].ModifyBottom,
+                ModifyTop = current[index].ModifyTop,
+                ModifyLeft = current[index].ModifyLeft,
+                ModifyRight = current[index].ModifyRight,
+                ModifyBottomLeft = current[index].ModifyBottomLeft,
+                ModifyBottomRight = current[index].ModifyBottomRight,
             };
-
         }
     }
 }

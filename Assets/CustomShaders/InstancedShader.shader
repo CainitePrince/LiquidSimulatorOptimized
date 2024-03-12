@@ -2,15 +2,17 @@ Shader "Custom/InstancedShader"
 {
     Properties
     {
-        _MainTex ("Texture", 2D) = "white" {}
-        _Color ("Color", Color) = (1,1,1,1)
+        _SolidColor("Solid Color", Color) = (0, 0, 0, 1)
+        _EmptyColor("Empty Color", Color) = (1, 1, 1, 1)
+        _WaterColor("Water Color", Color) = (0, 0, 1, 1)
+        _Ratio("Ratio", Float) = 1.0
     }
 
     SubShader
     {
-        Tags { "Queue"="Transparent" "IgnoreProjector"="True" "RenderType"="Transparent" }
+        Tags { "Queue"="Geometry" "IgnoreProjector"="True" "RenderType"="Opaque" }
         LOD 100
-        Blend SrcAlpha OneMinusSrcAlpha
+        Blend Off
 
         Pass
         {
@@ -29,21 +31,38 @@ Shader "Custom/InstancedShader"
 
             struct v2f
             {
-                float2 uv : TEXCOORD0;
+                float4 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
-            sampler2D _MainTex;
-            //float4 _MainTex_UV;
+            float4 _SolidColor;
+            float4 _EmptyColor;
+            float4 _WaterColor;
+            float _Ratio;
 
             // Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
             // See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
             // #pragma instancing_options assumeuniformscaling
             UNITY_INSTANCING_BUFFER_START(Props)
-              UNITY_DEFINE_INSTANCED_PROP(fixed4, _Color)
-              UNITY_DEFINE_INSTANCED_PROP(fixed4, _MainTex_UV)
+              UNITY_DEFINE_INSTANCED_PROP(float4, _Values)
             UNITY_INSTANCING_BUFFER_END(Props)
+
+            float2 rotate(float2 uv, float th)
+            {
+                return mul(uv, float2x2(cos(th), sin(th), -sin(th), cos(th)));
+            }
+
+            float square(float2 uv, float size, float2 offset, float angle)
+            {
+                float x = uv.x;
+                float y = uv.y;
+                float2 rotated = rotate(float2(x, y), angle);
+                x = rotated.x - offset.x;
+                y = rotated.y - offset.y;
+                float d = max(abs(x), abs(y)) - size;
+                return d;
+            }
 
             v2f vert (appdata v)
             {
@@ -53,20 +72,24 @@ Shader "Custom/InstancedShader"
                 UNITY_TRANSFER_INSTANCE_ID(v, o);
 
                 o.vertex = UnityObjectToClipPos(v.vertex);
-                //o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-                o.uv = (v.uv * UNITY_ACCESS_INSTANCED_PROP(Props, _MainTex_UV).xy) + UNITY_ACCESS_INSTANCED_PROP(Props, _MainTex_UV).zw;
-
+    
+                float4 values = UNITY_ACCESS_INSTANCED_PROP(Props, _Values);
+        
+                o.uv = float4((1.0f - v.uv.x) - 0.5, v.uv.y - 0.5, values.x, values.y);
+    
                 return o;
             }
 
             fixed4 frag (v2f i) : SV_Target
             {
                 UNITY_SETUP_INSTANCE_ID(i);
-
-                // sample the texture
-                fixed4 c = tex2D(_MainTex, i.uv) * UNITY_ACCESS_INSTANCED_PROP(Props, _Color);
-
-                return c;
+    
+                float liquid = i.uv.z;
+                float angle = i.uv.w;
+                float water = square(i.uv.xy, 0.5 * _Ratio, float2(0.0, liquid * _Ratio), angle);                
+                fixed3 waterOrEmpty = lerp(_EmptyColor.rgb, _WaterColor.rgb, step(0.0, water));
+                fixed3 color = lerp(waterOrEmpty, _SolidColor.rgb, step(2.0, liquid));
+                return fixed4(color, 1.0);
             }
             ENDCG
         }

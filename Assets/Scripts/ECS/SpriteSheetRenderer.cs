@@ -5,26 +5,32 @@ using Unity.Collections;
 using Unity.Mathematics;
 
 [UpdateAfter(typeof(SpriteSheetCalculationsJob))]
-public class SpriteSheetRenderer : SystemBase//ComponentSystem
+public class SpriteSheetRenderer : SystemBase
 {
-    private EntityQuery entityQuery;
+    private EntityQuery _entityQuery;
+    private int _valuesShaderProperty;
+    private MaterialPropertyBlock _materialPropertyBlock;
+
+    protected override void OnCreate()
+    {
+        base.OnCreate();
+
+        _valuesShaderProperty = Shader.PropertyToID("_Values");
+        _materialPropertyBlock = new MaterialPropertyBlock();
+    }
 
     protected override void OnUpdate()
     {
-        entityQuery = GetEntityQuery(ComponentType.ReadOnly<CellComponent>());
+        _entityQuery = GetEntityQuery(ComponentType.ReadOnly<CellComponent>());
 
-        NativeArray<CellComponent> cellSpriteDataArray = entityQuery.ToComponentDataArray<CellComponent>(Allocator.TempJob);
+        NativeArray<CellComponent> cellSpriteDataArray = _entityQuery.ToComponentDataArray<CellComponent>(Allocator.TempJob);
 
-        MaterialPropertyBlock materialPropertyBlock = new MaterialPropertyBlock();
-        Vector4[] uv = new Vector4[1];
-        Camera mainC = Camera.main;
-        Material SpriteSheetMat = CreateTileMap.GetInstance().SpriteSheetMat;
+        Material SpriteSheetMat = CreateTileMap.GetInstance().WaterMaterial;
         Mesh mesh = CreateTileMap.GetInstance().QuadMesh;
-        int shaderPropertyId = Shader.PropertyToID("_MainTex_UV");
-
+        
         //Account for limitations of DrawMeshInstanced
         int sliceCount = 1023;
-        for (int i = 0; i < cellSpriteDataArray.Length; i+=sliceCount)
+        for (int i = 0; i < cellSpriteDataArray.Length; i += sliceCount)
         {
             int sliceSize = math.min(cellSpriteDataArray.Length - i, sliceCount);
 
@@ -37,14 +43,14 @@ public class SpriteSheetRenderer : SystemBase//ComponentSystem
                 uvList.Add(cellComponentData.UV);
             }
 
-            materialPropertyBlock.SetVectorArray(shaderPropertyId, uvList);
+            _materialPropertyBlock.SetVectorArray(_valuesShaderProperty, uvList);
 
             Graphics.DrawMeshInstanced(
                 mesh,
                 0,
                 SpriteSheetMat,
                 matrixList,
-                materialPropertyBlock);
+                _materialPropertyBlock);
          }
 
         cellSpriteDataArray.Dispose();
