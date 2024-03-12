@@ -200,120 +200,8 @@ public class CreateTileMap : MonoBehaviour
         return 1 * (int)Mathf.Sign(v);
     }
 
-    private void DebugCode()
-    {
-        Vector2 gravity = GetGravityVector(out var _);
-
-        Vector3 bottom = Vector3.Normalize(new Vector3(gravity.x, gravity.y, 0.0f));
-        Vector3 left = -Vector3.Cross(bottom, new Vector3(0.0f, 0.0f, 1.0f));
-        Vector3 bottomLeft = Vector3.Normalize(bottom + left);
-        Vector3 topLeft = Vector3.Normalize(-bottom + left);
-
-        int xLeft = ToOffset(left.x);
-        int yLeft = ToOffset(left.y);
-        int xBottom = ToOffset(bottom.x);
-        int yBottom = ToOffset(bottom.y);
-        int xBottomLeft = ToOffset(bottomLeft.x);
-        int yBottomLeft = ToOffset(bottomLeft.y);
-        int xTopLeft = ToOffset(topLeft.x);
-        int yTopLeft = ToOffset(topLeft.y);
-
-        int width = 5;
-        int height = 5;
-
-        WaterSystemUnoptimized waterSystemUnoptimized = new WaterSystemUnoptimized();
-        waterSystemUnoptimized.current = new CellComponent[width * height];
-        waterSystemUnoptimized.next = new CellComponent[width * height];
-        waterSystemUnoptimized.GridHeight = height;
-        waterSystemUnoptimized.GridWidth = width;
-
-        bool isWall;
-        int index;
-        for (int y = 0; y < height; ++y)
-        {
-            for (int x = 0; x < width; ++x)
-            {
-                isWall = false;
-                index = x + y * width;//CalculateCellIndex(x, y);
-
-                //Create Cell Entity
-                //Entity cell = _entityManager.CreateEntity(_cellArchetype);
-
-                // Border Tiles
-                if (x == 0 || y == 0 || x == width - 1 || y == height - 1)
-                {
-                    isWall = true;
-                }
-
-                //Calculate World Pos
-                //float xpos = offset.x + (float)(x * _cellSize);
-                //float ypos = offset.y - (float)(y * _cellSize);
-                //float3 pos = new float3(xpos, ypos, 0);
-
-                //Fill Position Data
-                //_entityManager.SetComponentData(cell, new Translation
-                //{
-                //    Value = pos
-                //});
-
-                //Calc Neighbors Indexes
-                int topIndex = CalculateCellIndex(x - xBottom, y - yBottom);
-                int leftIndex = CalculateCellIndex(x + xLeft, y + yLeft);
-                int rightIndex = CalculateCellIndex(x - xLeft, y - yLeft);
-                int bottomIndex = CalculateCellIndex(x + xBottom, y + yBottom);
-                int bottomLeftIndex = CalculateCellIndex(x + xBottomLeft, y + yBottomLeft);
-                int topLeftIndex = CalculateCellIndex(x + xTopLeft, y + yTopLeft);
-                int topRightIndex = CalculateCellIndex(x - xBottomLeft, y - yBottomLeft);
-                int bottomRightIndex = CalculateCellIndex(x - xTopLeft, y - yTopLeft);
-
-                //if (isWall)
-                //{
-                //Set CellComponent Data
-                var c = new CellComponent
-                {
-                    xGrid = x,
-                    yGrid = y,
-                    Solid = isWall, //Solid
-                    //SpriteSheetFrame = isWall ? 2 : 0, //Wall Frame
-                    //WorldPos = new float2(xpos, ypos),
-                    CellSize = _cellSize,
-                    Liquid = 0f,
-                    Settled = false,
-                    index = index,
-                    LeftIndex = leftIndex,
-                    RightIndex = rightIndex,
-                    BottomIndex = bottomIndex,
-                    TopIndex = topIndex,
-                    BottomLeftIndex = bottomLeftIndex,
-                    TopLeftIndex = topLeftIndex,
-                    TopRightIndex = topRightIndex,
-                    BottomRightIndex = bottomRightIndex,
-                };
-                //Add Cell to Array
-                //_cells[index] = cell;
-
-                //debug
-                waterSystemUnoptimized.current[index] = c;
-            }
-        }
-
-        //debug
-        for (int x = 1; x < 4; ++x)
-        {
-            for (int y = 1; y < 2; ++y)
-            {
-                index = x + y * width;
-                waterSystemUnoptimized.current[index].Liquid = 20;
-            }
-        }
-
-        waterSystemUnoptimized.Simulate();
-    }
-
     private void CreateGrid()
     {
-        //DebugCode();
-
         Vector2 gravity = GetGravityVector(out var _);
         
         Vector3 bottom = Vector3.Normalize(new Vector3(gravity.x, gravity.y, 0.0f));
@@ -378,56 +266,27 @@ public class CreateTileMap : MonoBehaviour
                 int topRightIndex = CalculateCellIndex(x - xBottomLeft, y - yBottomLeft);
                 int bottomRightIndex = CalculateCellIndex(x - xTopLeft, y - yTopLeft);
 
-                //if (isWall)
-                //{
                 //Set CellComponent Data
-                    _entityManager.SetComponentData(cell, new CellComponent
-                    {
-                        xGrid = x,
-                        yGrid = y,
-                        Solid = isWall, //Solid
-                        //SpriteSheetFrame = isWall? 2 : 0, //Wall Frame
-                        WorldPos = new float2(xpos, ypos),
-                        CellSize = _cellSize,
-                        Liquid = 0f,
-                        Settled = false,
-                        index = index,
-                        LeftIndex = leftIndex,
-                        RightIndex = rightIndex,
-                        BottomIndex = bottomIndex,
-                        TopIndex = topIndex,
-                        BottomLeftIndex = bottomLeftIndex,
-                        TopLeftIndex = topLeftIndex,
-                        TopRightIndex = topRightIndex,
-                        BottomRightIndex = bottomRightIndex,
-                    });
-                /*
-                }
-                else
+                _entityManager.SetComponentData(cell, new CellComponent
                 {
-                    //Set Empty Cell Data
-                    _entityManager.SetComponentData(cell, new CellComponent
-                    {
-                        xGrid = x,
-                        yGrid = y,
-                        Solid = isWall,//NOT Solid
-                        SpriteSheetFrame = 0, //Empty Frame
-                        WorldPos = new float2(xpos, ypos),
-                        CellSize = _cellSize,
-                        Liquid = 0f, //Empty
-                        Settled = false,
-                        index = index,
-                        LeftIndex = leftIndex,
-                        RightIndex = rightIndex,
-                        BottomIndex = bottomIndex,
-                        TopIndex = topIndex,
-                        BottomLeftIndex = bottomLeftIndex,
-                        TopLeftIndex = topLeftIndex,
-                        TopRightIndex = topRightIndex,
-                        BottomRightIndex = bottomRightIndex,
-                    });
-                }
-                */
+                    xGrid = x,
+                    yGrid = y,
+                    Solid = isWall, //Solid
+                    WorldPos = new float2(xpos, ypos),
+                    CellSize = _cellSize,
+                    Liquid = 0f,
+                    Settled = false,
+                    index = index,
+                    LeftIndex = leftIndex,
+                    RightIndex = rightIndex,
+                    BottomIndex = bottomIndex,
+                    TopIndex = topIndex,
+                    BottomLeftIndex = bottomLeftIndex,
+                    TopLeftIndex = topLeftIndex,
+                    TopRightIndex = topRightIndex,
+                    BottomRightIndex = bottomRightIndex,
+                });
+
                 //Add Cell to Array
                 _cells[index] = cell;
             }
