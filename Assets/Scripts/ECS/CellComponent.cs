@@ -9,10 +9,6 @@ public struct CellComponent : IComponentData
     //World Pos
     public Unity.Mathematics.float2 WorldPos;
 
-    //Rendering Data
-    //0 = Empty //1 = Water //2 == Wall
-    //public int SpriteSheetFrame;
-
     //CellSize
     public float CellSize;
 

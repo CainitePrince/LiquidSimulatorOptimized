@@ -2,7 +2,7 @@
 using Unity.Jobs;
 using UnityEngine;
 
-public class SpriteSheetCalculationsJob : SystemBase
+public class PrepareForRenderJob : SystemBase
 { 
     protected override void OnUpdate()
     {

@@ -120,7 +120,6 @@ public class CreateTileMap : MonoBehaviour
                     if (_fill)
                     {
                         _clickedCell.Solid = true;
-                        //_clickedCell.SpriteSheetFrame = 2;
                         _clickedCell.Liquid = 0;
                         _entityManager.SetComponentData(_cells[CalculateCellIndex(x, y)], _clickedCell);
                     }
@@ -128,7 +127,6 @@ public class CreateTileMap : MonoBehaviour
                     {
                         _clickedCell.Solid = false;
                         _clickedCell.Liquid = 0;
-                        //_clickedCell.SpriteSheetFrame = 0;
                         _entityManager.SetComponentData(_cells[CalculateCellIndex(x, y)], _clickedCell);
                     }
                 }
@@ -143,7 +141,6 @@ public class CreateTileMap : MonoBehaviour
             {
                 _clickedCell.Solid = false;
                 _clickedCell.Liquid = _liquidPerClick;
-                //_clickedCell.SpriteSheetFrame = 1;
                 _entityManager.SetComponentData(_cells[CalculateCellIndex(x, y)], _clickedCell);
             }
         }

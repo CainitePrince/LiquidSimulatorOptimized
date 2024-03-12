@@ -4,12 +4,12 @@ using Unity.Jobs;
 using Unity.Burst;
 using UnityEngine;
 
-public class LiquidSimulator : JobComponentSystem
+public class LiquidSimulator : SystemBase//JobComponentSystem
 {
     private EntityQuery entityQuery;
 
-    protected override JobHandle OnUpdate(JobHandle inputDeps)
-    //protected override void OnUpdate()
+    //protected override JobHandle OnUpdate(JobHandle inputDeps)
+    protected override void OnUpdate()
     {
 
         //Get Entity Query of CellComponents
@@ -42,7 +42,7 @@ public class LiquidSimulator : JobComponentSystem
         int GridWidth = CreateTileMap.GetInstance().GridWidth;
 
         //Calculate Water Physics
-        inputDeps = new CalculateWaterPhysics()
+        JobHandle calculateWaterPhysicsHandle = new CalculateWaterPhysics()
         {
             current = current,
             next = next,
@@ -57,19 +57,21 @@ public class LiquidSimulator : JobComponentSystem
         }.Schedule(current.Length, 32);
 
         //Complete Physics Job
-        inputDeps.Complete();
+        //inputDeps.Complete();
+        calculateWaterPhysicsHandle.Complete();
 
         //Make Current = Water Physics Job's Next array
         current.CopyFrom(next);
 
         //Apply Water Physics
-        inputDeps = new ApplyWaterPhysics()
+        JobHandle applyWaterPhysicsHandle = new ApplyWaterPhysics()
         {
             current = current,
             next = next
         }.Schedule(current.Length, 32);
 
-        inputDeps.Complete();
+        //inputDeps.Complete();
+        applyWaterPhysicsHandle.Complete();
 
         //Update Entities
         entityQuery.CopyFromComponentDataArray(next);
@@ -78,7 +80,7 @@ public class LiquidSimulator : JobComponentSystem
         current.Dispose();
         next.Dispose();
 
-        return inputDeps;
+        //return inputDeps;
     }
 
     [BurstCompile]
@@ -688,7 +690,6 @@ public class LiquidSimulator : JobComponentSystem
             next[index] = new CellComponent
             {
                 Solid = current[index].Solid,
-                //SpriteSheetFrame = current[index].SpriteSheetFrame,
                 UV = current[index].UV,
                 Matrix = current[index].Matrix,
                 IsDownFlowingLiquid = isDownFlowing,
@@ -697,9 +698,9 @@ public class LiquidSimulator : JobComponentSystem
                 yGrid = current[index].yGrid,
                 index = current[index].index,
                 WorldPos = current[index].WorldPos,
-                Settled = Settled, //
-                SettleCount = SettleCount, //
-                Liquid = modifiedLiquid, //
+                Settled = Settled,
+                SettleCount = SettleCount,
+                Liquid = modifiedLiquid,
                 BottomIndex = current[index].BottomIndex,
                 TopIndex = current[index].TopIndex,
                 LeftIndex = current[index].LeftIndex,

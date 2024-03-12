@@ -4,8 +4,8 @@ using Unity.Entities;
 using Unity.Collections;
 using Unity.Mathematics;
 
-[UpdateAfter(typeof(SpriteSheetCalculationsJob))]
-public class SpriteSheetRenderer : SystemBase
+[UpdateAfter(typeof(PrepareForRenderJob))]
+public class CellRenderer : SystemBase
 {
     private EntityQuery _entityQuery;
     private int _valuesShaderProperty;
