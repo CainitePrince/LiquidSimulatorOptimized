@@ -294,7 +294,6 @@ namespace WaterSimulation
 
                     _entityManager.SetComponentData(cell, new CellRenderComponent 
                     {
-                        WorldPos = new float2(xpos, ypos),
                         Matrix = Matrix4x4.TRS(new Vector3(xpos, ypos, 0), Quaternion.identity, new Vector3(1.0f, 1.0f, 0.0f))
                     });
 
