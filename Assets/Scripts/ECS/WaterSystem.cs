@@ -81,10 +81,8 @@ namespace WaterSimulation
                 LeftIndices = tiles._leftIndices,
                 RightIndices = tiles._rightIndices,
                 BottomIndices = tiles._bottomIndices,
-                //BottomLeftIndices = tiles._bottomLeftIndices,
                 TopLeftIndices = tiles._topLeftIndices,
                 TopRightIndices = tiles._topRightIndices,
-                //BottomRightIndices = tiles._bottomRightIndices
             }.Schedule(current.Length, 32);
 
             applyWaterPhysicsHandle.Complete();
@@ -132,8 +130,6 @@ namespace WaterSimulation
                 if (current[index].Liquid == 0) { return; }
                 if (current[index].Settled) { return; }
 
-                //var tiles = CreateTileMap.GetInstance();
-
                 //Not enough Water
                 if (current[index].Liquid < MinLiquid) 
                 {
@@ -143,21 +139,10 @@ namespace WaterSimulation
                         Solid = current[index].Solid,
                         UV = current[index].UV,
                         Matrix = current[index].Matrix,
-                        CellSize = current[index].CellSize,
                         WorldPos = current[index].WorldPos,
                         Settled = current[index].Settled,
                         SettleCount = current[index].SettleCount,
                         Liquid = 0,
-                        /*
-                        BottomIndex = current[index].BottomIndex,
-                        TopIndex = current[index].TopIndex,
-                        LeftIndex = current[index].LeftIndex,
-                        RightIndex = current[index].RightIndex,
-                        BottomLeftIndex = current[index].BottomLeftIndex,
-                        TopLeftIndex = current[index].TopLeftIndex,
-                        TopRightIndex = current[index].TopRightIndex,
-                        BottomRightIndex = current[index].BottomRightIndex,
-                        */
                         ModifySelf = 0,
                         ModifyBottom = 0,
                         ModifyLeft = 0,
@@ -177,8 +162,6 @@ namespace WaterSimulation
                 float modifyLeft = 0;
                 float modifyRight = 0;
                 float modifyBottomLeft = 0;
-                //float modifyTopLeft = 0;
-                //float modifyTopRight = 0;
                 float modifyBottomRight = 0;
 
                 int bottomIndex = BottomIndices[index];
@@ -218,29 +201,16 @@ namespace WaterSimulation
                         Solid = current[index].Solid,
                         UV = current[index].UV,
                         Matrix = current[index].Matrix,
-                        CellSize = current[index].CellSize,
                         WorldPos = current[index].WorldPos,
                         Settled = current[index].Settled,
                         SettleCount = current[index].SettleCount,
                         Liquid = current[index].Liquid,
-                        /*
-                        BottomIndex = current[index].BottomIndex,
-                        TopIndex = current[index].TopIndex,
-                        LeftIndex = current[index].LeftIndex,
-                        RightIndex = current[index].RightIndex,
-                        BottomLeftIndex = current[index].BottomLeftIndex,
-                        TopLeftIndex = current[index].TopLeftIndex,
-                        TopRightIndex = current[index].TopRightIndex,
-                        BottomRightIndex = current[index].BottomRightIndex,
-                        */
                         ModifySelf = modifySelf,
                         ModifyBottom = modifyBottom,
                         ModifyTop = modifyTop,
                         ModifyLeft = modifyLeft,
                         ModifyRight = modifyRight,
                         ModifyBottomLeft = modifyBottomLeft,
-                        //ModifyUpLeft = modifyTopLeft,
-                        //ModifyUpRight = modifyTopRight,
                         ModifyBottomRight = modifyBottomRight
                     };
                     return;
@@ -250,8 +220,6 @@ namespace WaterSimulation
                 // Flow to bottom left
                 //if (current[index].BottomLeftIndex != -1) //Has bottom left neighbor
                 {
-                    //Debug.Log($"{index}");
-
                     if (current[bottomLeftIndex].Solid == false) //Bottom left neighbor is not solid
                     {
                         // Determine rate of flow
@@ -287,29 +255,15 @@ namespace WaterSimulation
                         Solid = current[index].Solid,
                         UV = current[index].UV,
                         Matrix = current[index].Matrix,
-                        CellSize = current[index].CellSize,
                         WorldPos = current[index].WorldPos,
                         Settled = current[index].Settled,
                         SettleCount = current[index].SettleCount,
                         Liquid = current[index].Liquid,
-                        /*
-                        BottomIndex = current[index].BottomIndex,
-                        TopIndex = current[index].TopIndex,
-                        LeftIndex = current[index].LeftIndex,
-                        RightIndex = current[index].RightIndex,
-                        BottomLeftIndex = current[index].BottomLeftIndex,
-                        TopLeftIndex = current[index].TopLeftIndex,
-                        TopRightIndex = current[index].TopRightIndex,
-                        BottomRightIndex = current[index].BottomRightIndex,
-                        */
                         ModifySelf = modifySelf,
                         ModifyBottom = modifyBottom,
-                        //ModifyTop = modifyTop,
                         ModifyLeft = modifyLeft,
                         ModifyRight = modifyRight,
                         ModifyBottomLeft = modifyBottomLeft,
-                        //ModifyUpLeft = modifyTopLeft,
-                        //ModifyUpRight = modifyTopRight,
                         ModifyBottomRight = modifyBottomRight
                     };
                     return;
@@ -354,29 +308,15 @@ namespace WaterSimulation
                         Solid = current[index].Solid,
                         UV = current[index].UV,
                         Matrix = current[index].Matrix,
-                        CellSize = current[index].CellSize,
                         WorldPos = current[index].WorldPos,
                         Settled = current[index].Settled,
                         SettleCount = current[index].SettleCount,
                         Liquid = current[index].Liquid,
-                        /*
-                        BottomIndex = current[index].BottomIndex,
-                        TopIndex = current[index].TopIndex,
-                        LeftIndex = current[index].LeftIndex,
-                        RightIndex = current[index].RightIndex,
-                        BottomLeftIndex = current[index].BottomLeftIndex,
-                        TopLeftIndex = current[index].TopLeftIndex,
-                        TopRightIndex = current[index].TopRightIndex,
-                        BottomRightIndex = current[index].BottomRightIndex,
-                        */
                         ModifySelf = modifySelf,
                         ModifyBottom = modifyBottom,
-                        //ModifyTop = modifyTop,
                         ModifyLeft = modifyLeft,
                         ModifyRight = modifyRight,
                         ModifyBottomLeft = modifyBottomLeft,
-                        //ModifyUpLeft = modifyTopLeft,
-                        //ModifyUpRight = modifyTopRight,
                         ModifyBottomRight = modifyBottomRight
                     };
                     return;
@@ -417,29 +357,16 @@ namespace WaterSimulation
                         Solid = current[index].Solid,
                         UV = current[index].UV,
                         Matrix = current[index].Matrix,
-                        CellSize = current[index].CellSize,
                         WorldPos = current[index].WorldPos,
                         Settled = current[index].Settled,
                         SettleCount = current[index].SettleCount,
                         Liquid = current[index].Liquid,
-                        /*
-                        BottomIndex = current[index].BottomIndex,
-                        TopIndex = current[index].TopIndex,
-                        LeftIndex = current[index].LeftIndex,
-                        RightIndex = current[index].RightIndex,
-                        BottomLeftIndex = current[index].BottomLeftIndex,
-                        TopLeftIndex = current[index].TopLeftIndex,
-                        TopRightIndex = current[index].TopRightIndex,
-                        BottomRightIndex = current[index].BottomRightIndex,
-                        */
                         ModifySelf = modifySelf,
                         ModifyBottom = modifyBottom,
                         ModifyTop = modifyTop,
                         ModifyLeft = modifyLeft,
                         ModifyRight = modifyRight,
                         ModifyBottomLeft = modifyBottomLeft,
-                        //ModifyUpLeft = modifyTopLeft,
-                        //ModifyUpRight = modifyTopRight,
                         ModifyBottomRight = modifyBottomRight
                     };
                     return;
@@ -480,125 +407,37 @@ namespace WaterSimulation
                         Solid = current[index].Solid,
                         UV = current[index].UV,
                         Matrix = current[index].Matrix,
-                        CellSize = current[index].CellSize,
                         WorldPos = current[index].WorldPos,
                         Settled = current[index].Settled,
                         SettleCount = current[index].SettleCount,
                         Liquid = current[index].Liquid,
-                        /*
-                        BottomIndex = current[index].BottomIndex,
-                        TopIndex = current[index].TopIndex,
-                        LeftIndex = current[index].LeftIndex,
-                        RightIndex = current[index].RightIndex,
-                        BottomLeftIndex = current[index].BottomLeftIndex,
-                        TopLeftIndex = current[index].TopLeftIndex,
-                        TopRightIndex = current[index].TopRightIndex,
-                        BottomRightIndex = current[index].BottomRightIndex,
-                        */
                         ModifySelf = modifySelf,
                         ModifyBottom = modifyBottom,
                         ModifyTop = modifyTop,
                         ModifyLeft = modifyLeft,
                         ModifyRight = modifyRight,
                         ModifyBottomLeft = modifyBottomLeft,
-                        //ModifyUpLeft = modifyTopLeft,
-                        //ModifyUpRight = modifyTopRight,
                         ModifyBottomRight = modifyBottomRight
                     };
                     return;
                 }
 
-                /*
-                //Flow to Top Cell
-                if (current[index].TopIndex != -1)
-                {
-                    if (current[current[index].TopIndex].Solid == false)
-                    {
-
-                        flow = remainingLiquid - CalculateVerticalFlowValue(remainingLiquid, current[current[index].TopIndex].Liquid);
-                        if (flow > MinFlow)
-                            flow *= FlowSpeed;
-
-                        // constrain flow
-                        flow = Mathf.Max(flow, 0);
-                        if (flow > Mathf.Min(MaxFlow, remainingLiquid))
-                            flow = Mathf.Min(MaxFlow, remainingLiquid);
-
-                        // Adjust values
-                        if (flow != 0)
-                        {
-                            remainingLiquid -= flow;
-                            modifySelf -= flow;
-                            modifyTop += flow;
-                        }
-                    }
-                }
-
-
-                // Check to ensure we still have liquid in this cell
-                if (remainingLiquid < MinLiquid)
-                {
-                    modifySelf -= remainingLiquid;
-                    next[index] = new CellComponent
-                    {
-                        Solid = current[index].Solid,
-                        SpriteSheetFrame = 0, //Empty
-                        UV = current[index].UV,
-                        Matrix = current[index].Matrix,
-                        CellSize = current[index].CellSize,
-                        xGrid = current[index].xGrid,
-                        yGrid = current[index].yGrid,
-                        index = current[index].index,
-                        WorldPos = current[index].WorldPos,
-                        Settled = current[index].Settled,
-                        SettleCount = current[index].SettleCount,
-                        Liquid = current[index].Liquid,
-                        BottomIndex = current[index].BottomIndex,
-                        TopIndex = current[index].TopIndex,
-                        LeftIndex = current[index].LeftIndex,
-                        RightIndex = current[index].RightIndex,
-                        BottomLeftIndex = current[index].BottomLeftIndex,
-                        TopLeftIndex = current[index].TopLeftIndex,
-                        TopRightIndex = current[index].TopRightIndex,
-                        BottomRightIndex = current[index].BottomRightIndex,
-                        ModifySelf = modifySelf,
-                        ModifyBottom = modifyBottom,
-                        ModifyTop = modifyTop,
-                        ModifyLeft = modifyLeft,
-                        ModifyRight = modifyRight
-                    };
-                    return;
-                }
-                */
                 //Update Cell Changes
                 next[index] = new CellComponent
                 {
                     Solid = current[index].Solid,
                     UV = current[index].UV,
                     Matrix = current[index].Matrix,
-                    CellSize = current[index].CellSize,
                     WorldPos = current[index].WorldPos,
                     Settled = current[index].Settled,
                     SettleCount = current[index].SettleCount,
                     Liquid = current[index].Liquid,
-                    /*
-                    BottomIndex = current[index].BottomIndex,
-                    TopIndex = current[index].TopIndex,
-                    LeftIndex = current[index].LeftIndex,
-                    RightIndex = current[index].RightIndex,
-                    BottomLeftIndex = current[index].BottomLeftIndex,
-                    TopLeftIndex = current[index].TopLeftIndex,
-                    TopRightIndex = current[index].TopRightIndex,
-                    BottomRightIndex = current[index].BottomRightIndex,
-                    */
                     ModifySelf = modifySelf,
                     ModifyBottom = modifyBottom,
                     ModifyTop = modifyTop,
                     ModifyLeft = modifyLeft,
                     ModifyRight = modifyRight,
                     ModifyBottomLeft = modifyBottomLeft,
-                    //ModifyUpLeft = modifyTopLeft,
-                    //ModifyUpRight = modifyTopRight,
                     ModifyBottomRight = modifyBottomRight
                 };
             }
@@ -640,16 +479,12 @@ namespace WaterSimulation
             [ReadOnly] public NativeArray<int> LeftIndices;
             [ReadOnly] public NativeArray<int> RightIndices;
             [ReadOnly] public NativeArray<int> BottomIndices;
-            //[ReadOnly] public NativeArray<int> BottomLeftIndices;
             [ReadOnly] public NativeArray<int> TopLeftIndices;
             [ReadOnly] public NativeArray<int> TopRightIndices;
-            //[ReadOnly] public NativeArray<int> BottomRightIndices;
 
             public void Execute(int index)
             {
                 if (current[index].Solid) { return; }
-
-                //var tiles = CreateTileMap.GetInstance();
 
                 float modifiedLiquid = current[index].Liquid;
                 int SettleCount = current[index].SettleCount;
@@ -709,21 +544,10 @@ namespace WaterSimulation
                     UV = current[index].UV,
                     Matrix = current[index].Matrix,
                     IsDownFlowingLiquid = isDownFlowing,
-                    CellSize = current[index].CellSize,
                     WorldPos = current[index].WorldPos,
                     Settled = Settled,
                     SettleCount = SettleCount,
                     Liquid = modifiedLiquid,
-                    /*
-                    BottomIndex = current[index].BottomIndex,
-                    TopIndex = current[index].TopIndex,
-                    LeftIndex = current[index].LeftIndex,
-                    RightIndex = current[index].RightIndex,
-                    BottomLeftIndex = current[index].BottomLeftIndex,
-                    TopLeftIndex = current[index].TopLeftIndex,
-                    TopRightIndex = current[index].TopRightIndex,
-                    BottomRightIndex = current[index].BottomRightIndex,
-                    */
                     ModifySelf = current[index].ModifySelf,
                     ModifyBottom = current[index].ModifyBottom,
                     ModifyTop = current[index].ModifyTop,

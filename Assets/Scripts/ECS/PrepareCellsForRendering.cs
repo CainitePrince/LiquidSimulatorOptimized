@@ -27,7 +27,7 @@ namespace WaterSimulation
                 cell.Matrix = Matrix4x4.TRS(
                     new Vector3(cell.WorldPos.x, cell.WorldPos.y, 0),
                     Quaternion.identity,
-                    new Vector3(cell.CellSize, cell.CellSize, 0));
+                    new Vector3(1.0f, 1.0f, 0.0f));
             }).Schedule();
         }
     }

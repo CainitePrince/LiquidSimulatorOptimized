@@ -81,13 +81,22 @@ namespace WaterSimulation
             //Cell ArchType
             _cellArchetype = _entityManager.CreateArchetype(
                 typeof(LocalToWorld),
-                //typeof(Unity.Transforms. Translation),
-                //typeof(Rotation),
-                //typeof(NonUniformScale),
                 typeof(CellComponent));
 
             // Generate our grid
             CreateGrid();
+        }
+
+        private void OnDestroy()
+        {
+            _topIndices.Dispose();
+            _bottomIndices.Dispose();
+            _leftIndices.Dispose();
+            _rightIndices.Dispose();
+            _bottomLeftIndices.Dispose();
+            _topLeftIndices.Dispose();
+            _topRightIndices.Dispose();
+            _bottomRightIndices.Dispose();
         }
 
         void Update()
@@ -300,17 +309,8 @@ namespace WaterSimulation
                     {
                         Solid = isWall,
                         WorldPos = new float2(xpos, ypos),
-                        CellSize = _cellSize,
                         Liquid = 0f,
                         Settled = false,
-                        //LeftIndex = leftIndex,
-                        //RightIndex = rightIndex,
-                        //BottomIndex = bottomIndex,
-                        //TopIndex = topIndex,
-                        //BottomLeftIndex = bottomLeftIndex,
-                        //TopLeftIndex = topLeftIndex,
-                        //TopRightIndex = topRightIndex,
-                        //BottomRightIndex = bottomRightIndex,
                     });
 
                     //Add Cell to Array
