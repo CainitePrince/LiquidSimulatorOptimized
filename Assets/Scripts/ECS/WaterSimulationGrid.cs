@@ -79,7 +79,7 @@ namespace WaterSimulation
 
             //Cell ArchType
             _cellArchetype = _entityManager.CreateArchetype(
-                typeof(LocalToWorld),
+                //typeof(LocalToWorld),
                 typeof(CellSimulationComponent),
                 typeof(CellRenderComponent));
 
@@ -280,29 +280,14 @@ namespace WaterSimulation
                     //float3 pos = new float3(xpos, ypos, 0);
 
                     //Calc Neighbors Indexes
-                    int topIndex = CalculateCellIndex(x - xBottom, y - yBottom);
-                    TopIndices[index] = topIndex;
-
-                    int leftIndex = CalculateCellIndex(x + xLeft, y + yLeft);
-                    LeftIndices[index] = leftIndex;
-
-                    int rightIndex = CalculateCellIndex(x - xLeft, y - yLeft);
-                    RightIndices[index] = rightIndex;
-
-                    int bottomIndex = CalculateCellIndex(x + xBottom, y + yBottom);
-                    BottomIndices[index] = bottomIndex;
-
-                    int bottomLeftIndex = CalculateCellIndex(x + xBottomLeft, y + yBottomLeft);
-                    BottomLeftIndices[index] = bottomLeftIndex;
-
-                    int topLeftIndex = CalculateCellIndex(x + xTopLeft, y + yTopLeft);
-                    TopLeftIndices[index] = topLeftIndex;
-
-                    int topRightIndex = CalculateCellIndex(x - xBottomLeft, y - yBottomLeft);
-                    TopRightIndices[index] = topRightIndex;
-
-                    int bottomRightIndex = CalculateCellIndex(x - xTopLeft, y - yTopLeft);
-                    BottomRightIndices[index] = bottomRightIndex;
+                    TopIndices[index] = CalculateCellIndex(x - xBottom, y - yBottom);
+                    LeftIndices[index] = CalculateCellIndex(x + xLeft, y + yLeft);
+                    RightIndices[index] = CalculateCellIndex(x - xLeft, y - yLeft);
+                    BottomIndices[index] = CalculateCellIndex(x + xBottom, y + yBottom);
+                    BottomLeftIndices[index] = CalculateCellIndex(x + xBottomLeft, y + yBottomLeft);
+                    TopLeftIndices[index] = CalculateCellIndex(x + xTopLeft, y + yTopLeft);
+                    TopRightIndices[index] = CalculateCellIndex(x - xBottomLeft, y - yBottomLeft);
+                    BottomRightIndices[index] = CalculateCellIndex(x - xTopLeft, y - yTopLeft);
 
                     //Set CellComponent Data
                     _entityManager.SetComponentData(cell, new CellSimulationComponent

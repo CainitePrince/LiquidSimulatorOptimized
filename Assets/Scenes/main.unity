@@ -221,7 +221,7 @@ MonoBehaviour:
   QuadMesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
   WaterMaterial: {fileID: 2100000, guid: dbed33f450077dd4ebe77b0f0a62536c, type: 2}
   _liquidPerClick: 5
-  _gravity: 0
+  _gravity: 7
 --- !u!4 &1379555689
 Transform:
   m_ObjectHideFlags: 0

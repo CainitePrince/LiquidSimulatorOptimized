@@ -5,7 +5,6 @@ Shader "Custom/InstancedShader"
         _SolidColor("Solid Color", Color) = (0, 0, 0, 1)
         _EmptyColor("Empty Color", Color) = (1, 1, 1, 1)
         _WaterColor("Water Color", Color) = (0, 0, 1, 1)
-        _Ratio("Ratio", Float) = 1.0
     }
 
     SubShader
@@ -50,7 +49,9 @@ Shader "Custom/InstancedShader"
 
             float2 rotate(float2 uv, float th)
             {
-                return mul(uv, float2x2(cos(th), sin(th), -sin(th), cos(th)));
+                float s = sin(th);
+                float c = cos(th);
+                return mul(uv, float2x2(c, s, -s, c));
             }
 
             float square(float2 uv, float size, float2 offset, float angle)

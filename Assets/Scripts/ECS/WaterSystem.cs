@@ -160,30 +160,28 @@ namespace WaterSimulation
                 float modifyBottomLeft = 0;
                 float modifyBottomRight = 0;
 
+                // Flow to bottom cell
+
                 int bottomIndex = BottomIndices[index];
 
-                // Flow to bottom cell
-                //if (current[index].BottomIndex != -1) //Has bottom neighbor
+                if (current[bottomIndex].Solid == false) //Bottom neighbor is not solid
                 {
-                    if (current[bottomIndex].Solid == false) //Bottom neighbor is not solid
+                    // Determine rate of flow
+                    flow = CalculateVerticalFlowValue(remainingLiquid, current[bottomIndex].Liquid) - current[bottomIndex].Liquid;
+                    if (current[bottomIndex].Liquid > 0 && flow > MinFlow)
+                        flow *= FlowSpeed;
+
+                    // Constrain flow
+                    flow = Mathf.Max(flow, 0);
+                    if (flow > Mathf.Min(MaxFlow, current[index].Liquid))
+                        flow = Mathf.Min(MaxFlow, current[index].Liquid);
+
+                    // Update temp values
+                    if (flow != 0)
                     {
-                        // Determine rate of flow
-                        flow = CalculateVerticalFlowValue(remainingLiquid, current[bottomIndex].Liquid) - current[bottomIndex].Liquid;
-                        if (current[bottomIndex].Liquid > 0 && flow > MinFlow)
-                            flow *= FlowSpeed;
-
-                        // Constrain flow
-                        flow = Mathf.Max(flow, 0);
-                        if (flow > Mathf.Min(MaxFlow, current[index].Liquid))
-                            flow = Mathf.Min(MaxFlow, current[index].Liquid);
-
-                        // Update temp values
-                        if (flow != 0)
-                        {
-                            remainingLiquid -= flow;
-                            modifySelf -= flow;
-                            modifyBottom += flow;
-                        }
+                        remainingLiquid -= flow;
+                        modifySelf -= flow;
+                        modifyBottom += flow;
                     }
                 }
 
@@ -208,33 +206,32 @@ namespace WaterSimulation
                     };
                     return;
                 }
+
+                // Flow to bottom left
 
                 int bottomLeftIndex = BottomLeftIndices[index];
-                // Flow to bottom left
-                //if (current[index].BottomLeftIndex != -1) //Has bottom left neighbor
+
+                if (current[bottomLeftIndex].Solid == false) //Bottom left neighbor is not solid
                 {
-                    if (current[bottomLeftIndex].Solid == false) //Bottom left neighbor is not solid
+                    // Determine rate of flow
+                    flow = CalculateVerticalFlowValue(remainingLiquid, current[bottomLeftIndex].Liquid) - current[bottomLeftIndex].Liquid;
+
+                    flow *= 0.5f;
+
+                    if (current[bottomLeftIndex].Liquid > 0 && flow > MinFlow)
+                        flow *= FlowSpeed;
+
+                    // Constrain flow
+                    flow = Mathf.Max(flow, 0);
+                    if (flow > Mathf.Min(MaxFlow, current[index].Liquid))
+                        flow = Mathf.Min(MaxFlow, current[index].Liquid);
+
+                    // Update temp values
+                    if (flow != 0)
                     {
-                        // Determine rate of flow
-                        flow = CalculateVerticalFlowValue(remainingLiquid, current[bottomLeftIndex].Liquid) - current[bottomLeftIndex].Liquid;
-
-                        flow *= 0.5f;
-
-                        if (current[bottomLeftIndex].Liquid > 0 && flow > MinFlow)
-                            flow *= FlowSpeed;
-
-                        // Constrain flow
-                        flow = Mathf.Max(flow, 0);
-                        if (flow > Mathf.Min(MaxFlow, current[index].Liquid))
-                            flow = Mathf.Min(MaxFlow, current[index].Liquid);
-
-                        // Update temp values
-                        if (flow != 0)
-                        {
-                            remainingLiquid -= flow;
-                            modifySelf -= flow;
-                            modifyBottomLeft += flow;
-                        }
+                        remainingLiquid -= flow;
+                        modifySelf -= flow;
+                        modifyBottomLeft += flow;
                     }
                 }
 
@@ -246,9 +243,6 @@ namespace WaterSimulation
                     next[index] = new CellSimulationComponent
                     {
                         Solid = current[index].Solid,
-                        //UV = current[index].UV,
-                        //Matrix = current[index].Matrix,
-                        //WorldPos = current[index].WorldPos,
                         Settled = current[index].Settled,
                         SettleCount = current[index].SettleCount,
                         Liquid = current[index].Liquid,
@@ -261,33 +255,32 @@ namespace WaterSimulation
                     };
                     return;
                 }
+
+                // Flow to bottom right
 
                 int bottomRightIndex = BottomRightIndices[index];
-                // Flow to bottom right
-                //if (current[index].BottomRightIndex != -1) //Has bottom left neighbor
+                
+                if (current[bottomRightIndex].Solid == false) //Bottom left neighbor is not solid
                 {
-                    if (current[bottomRightIndex].Solid == false) //Bottom left neighbor is not solid
+                    // Determine rate of flow
+                    flow = CalculateVerticalFlowValue(remainingLiquid, current[bottomRightIndex].Liquid) - current[bottomRightIndex].Liquid;
+
+                    flow *= 0.5f;
+
+                    if (current[bottomRightIndex].Liquid > 0 && flow > MinFlow)
+                        flow *= FlowSpeed;
+
+                    // Constrain flow
+                    flow = Mathf.Max(flow, 0);
+                    if (flow > Mathf.Min(MaxFlow, current[index].Liquid))
+                        flow = Mathf.Min(MaxFlow, current[index].Liquid);
+
+                    // Update temp values
+                    if (flow != 0)
                     {
-                        // Determine rate of flow
-                        flow = CalculateVerticalFlowValue(remainingLiquid, current[bottomRightIndex].Liquid) - current[bottomRightIndex].Liquid;
-
-                        flow *= 0.5f;
-
-                        if (current[bottomRightIndex].Liquid > 0 && flow > MinFlow)
-                            flow *= FlowSpeed;
-
-                        // Constrain flow
-                        flow = Mathf.Max(flow, 0);
-                        if (flow > Mathf.Min(MaxFlow, current[index].Liquid))
-                            flow = Mathf.Min(MaxFlow, current[index].Liquid);
-
-                        // Update temp values
-                        if (flow != 0)
-                        {
-                            remainingLiquid -= flow;
-                            modifySelf -= flow;
-                            modifyBottomRight += flow;
-                        }
+                        remainingLiquid -= flow;
+                        modifySelf -= flow;
+                        modifyBottomRight += flow;
                     }
                 }
 
@@ -299,9 +292,6 @@ namespace WaterSimulation
                     next[index] = new CellSimulationComponent
                     {
                         Solid = current[index].Solid,
-                        //UV = current[index].UV,
-                        //Matrix = current[index].Matrix,
-                        //WorldPos = current[index].WorldPos,
                         Settled = current[index].Settled,
                         SettleCount = current[index].SettleCount,
                         Liquid = current[index].Liquid,
@@ -315,29 +305,27 @@ namespace WaterSimulation
                     return;
                 }
 
-                int leftIndex = LeftIndices[index];
                 // Flow to left cell
-                //if (current[index].LeftIndex != -1)
+
+                int leftIndex = LeftIndices[index];
+                if (current[leftIndex].Solid == false)
                 {
-                    if (current[leftIndex].Solid == false)
+                    // Calculate flow rate
+                    flow = (remainingLiquid - current[leftIndex].Liquid) / 4f;
+                    if (flow > MinFlow)
+                        flow *= FlowSpeed;
+
+                    // constrain flow
+                    flow = Mathf.Max(flow, 0);
+                    if (flow > Mathf.Min(MaxFlow, remainingLiquid))
+                        flow = Mathf.Min(MaxFlow, remainingLiquid);
+
+                    // Adjust temp values
+                    if (flow != 0)
                     {
-                        // Calculate flow rate
-                        flow = (remainingLiquid - current[leftIndex].Liquid) / 4f;
-                        if (flow > MinFlow)
-                            flow *= FlowSpeed;
-
-                        // constrain flow
-                        flow = Mathf.Max(flow, 0);
-                        if (flow > Mathf.Min(MaxFlow, remainingLiquid))
-                            flow = Mathf.Min(MaxFlow, remainingLiquid);
-
-                        // Adjust temp values
-                        if (flow != 0)
-                        {
-                            remainingLiquid -= flow;
-                            modifySelf -= flow;
-                            modifyLeft += flow;
-                        }
+                        remainingLiquid -= flow;
+                        modifySelf -= flow;
+                        modifyLeft += flow;
                     }
                 }
 
@@ -348,9 +336,6 @@ namespace WaterSimulation
                     next[index] = new CellSimulationComponent
                     {
                         Solid = current[index].Solid,
-                        //UV = current[index].UV,
-                        //Matrix = current[index].Matrix,
-                        //WorldPos = current[index].WorldPos,
                         Settled = current[index].Settled,
                         SettleCount = current[index].SettleCount,
                         Liquid = current[index].Liquid,
@@ -365,29 +350,28 @@ namespace WaterSimulation
                     return;
                 }
 
-                int rightIndex = RightIndices[index];
                 //Flow to Right
-                //if (current[index].RightIndex != -1)
+
+                int rightIndex = RightIndices[index];
+                
+                if (current[rightIndex].Solid == false)
                 {
-                    if (current[rightIndex].Solid == false)
+                    // calc flow rate
+                    flow = (remainingLiquid - current[rightIndex].Liquid) / 3f;
+                    if (flow > MinFlow)
+                        flow *= FlowSpeed;
+
+                    // constrain flow
+                    flow = Mathf.Max(flow, 0);
+                    if (flow > Mathf.Min(MaxFlow, remainingLiquid))
+                        flow = Mathf.Min(MaxFlow, remainingLiquid);
+
+                    // Adjust temp values
+                    if (flow != 0)
                     {
-                        // calc flow rate
-                        flow = (remainingLiquid - current[rightIndex].Liquid) / 3f;
-                        if (flow > MinFlow)
-                            flow *= FlowSpeed;
-
-                        // constrain flow
-                        flow = Mathf.Max(flow, 0);
-                        if (flow > Mathf.Min(MaxFlow, remainingLiquid))
-                            flow = Mathf.Min(MaxFlow, remainingLiquid);
-
-                        // Adjust temp values
-                        if (flow != 0)
-                        {
-                            remainingLiquid -= flow;
-                            modifySelf -= flow;
-                            modifyRight += flow;
-                        }
+                        remainingLiquid -= flow;
+                        modifySelf -= flow;
+                        modifyRight += flow;
                     }
                 }
 
@@ -398,9 +382,6 @@ namespace WaterSimulation
                     next[index] = new CellSimulationComponent
                     {
                         Solid = current[index].Solid,
-                        //UV = current[index].UV,
-                        //Matrix = current[index].Matrix,
-                        //WorldPos = current[index].WorldPos,
                         Settled = current[index].Settled,
                         SettleCount = current[index].SettleCount,
                         Liquid = current[index].Liquid,
@@ -419,9 +400,6 @@ namespace WaterSimulation
                 next[index] = new CellSimulationComponent
                 {
                     Solid = current[index].Solid,
-                    //UV = current[index].UV,
-                    //Matrix = current[index].Matrix,
-                    //WorldPos = current[index].WorldPos,
                     Settled = current[index].Settled,
                     SettleCount = current[index].SettleCount,
                     Liquid = current[index].Liquid,
@@ -534,10 +512,7 @@ namespace WaterSimulation
                 next[index] = new CellSimulationComponent
                 {
                     Solid = current[index].Solid,
-                    //UV = current[index].UV,
-                    //Matrix = current[index].Matrix,
                     IsDownFlowingLiquid = isDownFlowing,
-                    //WorldPos = current[index].WorldPos,
                     Settled = Settled,
                     SettleCount = SettleCount,
                     Liquid = modifiedLiquid,
