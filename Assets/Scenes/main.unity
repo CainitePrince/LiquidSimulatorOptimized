@@ -222,7 +222,6 @@ MonoBehaviour:
   WaterMaterial: {fileID: 2100000, guid: dbed33f450077dd4ebe77b0f0a62536c, type: 2}
   _liquidPerClick: 5
   _gravity: 0
-  _cellSize: 1
 --- !u!4 &1379555689
 Transform:
   m_ObjectHideFlags: 0

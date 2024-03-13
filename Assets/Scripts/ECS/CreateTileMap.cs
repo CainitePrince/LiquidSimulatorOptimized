@@ -31,25 +31,24 @@ namespace WaterSimulation
         public int GridHeight = 40;
         public Mesh QuadMesh;
         public Material WaterMaterial;
+        public NativeArray<int> TopIndices;
+        public NativeArray<int> BottomIndices;
+        public NativeArray<int> LeftIndices;
+        public NativeArray<int> RightIndices;
+        public NativeArray<int> BottomLeftIndices;
+        public NativeArray<int> TopLeftIndices;
+        public NativeArray<int> TopRightIndices;
+        public NativeArray<int> BottomRightIndices;
 
         [SerializeField] private int _liquidPerClick = 5; //Liquid placed when clicked
         [SerializeField] private GravityEnum _gravity = GravityEnum.Down;
-        [SerializeField] private float _cellSize = 1;
 
         private Entity[] _cells;
         private bool _fill;
         private EntityManager _entityManager;
         private EntityArchetype _cellArchetype;
         private CellComponent _clickedCell;
-
-        public NativeArray<int> _topIndices;
-        public NativeArray<int> _bottomIndices;
-        public NativeArray<int> _leftIndices;
-        public NativeArray<int> _rightIndices;
-        public NativeArray<int> _bottomLeftIndices;
-        public NativeArray<int> _topLeftIndices;
-        public NativeArray<int> _topRightIndices;
-        public NativeArray<int> _bottomRightIndices;
+        private float _cellSize = 1.0f;
 
         private static CreateTileMap _instance;
 
@@ -89,14 +88,14 @@ namespace WaterSimulation
 
         private void OnDestroy()
         {
-            _topIndices.Dispose();
-            _bottomIndices.Dispose();
-            _leftIndices.Dispose();
-            _rightIndices.Dispose();
-            _bottomLeftIndices.Dispose();
-            _topLeftIndices.Dispose();
-            _topRightIndices.Dispose();
-            _bottomRightIndices.Dispose();
+            TopIndices.Dispose();
+            BottomIndices.Dispose();
+            LeftIndices.Dispose();
+            RightIndices.Dispose();
+            BottomLeftIndices.Dispose();
+            TopLeftIndices.Dispose();
+            TopRightIndices.Dispose();
+            BottomRightIndices.Dispose();
         }
 
         void Update()
@@ -238,14 +237,14 @@ namespace WaterSimulation
 
             int cellCount = GridWidth * GridHeight;
 
-            _topIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
-            _bottomIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
-            _leftIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
-            _rightIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
-            _bottomLeftIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
-            _topLeftIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
-            _topRightIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
-            _bottomRightIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
+            TopIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
+            BottomIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
+            LeftIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
+            RightIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
+            BottomLeftIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
+            TopLeftIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
+            TopRightIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
+            BottomRightIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
 
             //Create Entity TileMap
             _cells = new Entity[GridWidth * GridHeight];
@@ -281,28 +280,28 @@ namespace WaterSimulation
 
                     //Calc Neighbors Indexes
                     int topIndex = CalculateCellIndex(x - xBottom, y - yBottom);
-                    _topIndices[index] = topIndex;
+                    TopIndices[index] = topIndex;
 
                     int leftIndex = CalculateCellIndex(x + xLeft, y + yLeft);
-                    _leftIndices[index] = leftIndex;
+                    LeftIndices[index] = leftIndex;
 
                     int rightIndex = CalculateCellIndex(x - xLeft, y - yLeft);
-                    _rightIndices[index] = rightIndex;
+                    RightIndices[index] = rightIndex;
 
                     int bottomIndex = CalculateCellIndex(x + xBottom, y + yBottom);
-                    _bottomIndices[index] = bottomIndex;
+                    BottomIndices[index] = bottomIndex;
 
                     int bottomLeftIndex = CalculateCellIndex(x + xBottomLeft, y + yBottomLeft);
-                    _bottomLeftIndices[index] = bottomLeftIndex;
+                    BottomLeftIndices[index] = bottomLeftIndex;
 
                     int topLeftIndex = CalculateCellIndex(x + xTopLeft, y + yTopLeft);
-                    _topLeftIndices[index] = topLeftIndex;
+                    TopLeftIndices[index] = topLeftIndex;
 
                     int topRightIndex = CalculateCellIndex(x - xBottomLeft, y - yBottomLeft);
-                    _topRightIndices[index] = topRightIndex;
+                    TopRightIndices[index] = topRightIndex;
 
                     int bottomRightIndex = CalculateCellIndex(x - xTopLeft, y - yTopLeft);
-                    _bottomRightIndices[index] = bottomRightIndex;
+                    BottomRightIndices[index] = bottomRightIndex;
 
                     //Set CellComponent Data
                     _entityManager.SetComponentData(cell, new CellComponent

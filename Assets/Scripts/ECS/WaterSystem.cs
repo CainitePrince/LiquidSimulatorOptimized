@@ -56,14 +56,14 @@ namespace WaterSimulation
                 FlowSpeed = FlowSpeed,
                 GridWidth = GridWidth,
 
-                TopIndices = tiles._topIndices,
-                LeftIndices = tiles._leftIndices,
-                RightIndices = tiles._rightIndices,
-                BottomIndices = tiles._bottomIndices,
-                BottomLeftIndices = tiles._bottomLeftIndices,
-                TopLeftIndices = tiles._topLeftIndices,
-                TopRightIndices = tiles._topRightIndices,
-                BottomRightIndices = tiles._bottomRightIndices
+                TopIndices = tiles.TopIndices,
+                LeftIndices = tiles.LeftIndices,
+                RightIndices = tiles.RightIndices,
+                BottomIndices = tiles.BottomIndices,
+                BottomLeftIndices = tiles.BottomLeftIndices,
+                TopLeftIndices = tiles.TopLeftIndices,
+                TopRightIndices = tiles.TopRightIndices,
+                BottomRightIndices = tiles.BottomRightIndices
         }.Schedule(current.Length, 32);
 
             //Complete Physics Job
@@ -77,12 +77,12 @@ namespace WaterSimulation
             {
                 current = current,
                 next = next,
-                TopIndices = tiles._topIndices,
-                LeftIndices = tiles._leftIndices,
-                RightIndices = tiles._rightIndices,
-                BottomIndices = tiles._bottomIndices,
-                TopLeftIndices = tiles._topLeftIndices,
-                TopRightIndices = tiles._topRightIndices,
+                TopIndices = tiles.TopIndices,
+                LeftIndices = tiles.LeftIndices,
+                RightIndices = tiles.RightIndices,
+                BottomIndices = tiles.BottomIndices,
+                TopLeftIndices = tiles.TopLeftIndices,
+                TopRightIndices = tiles.TopRightIndices,
             }.Schedule(current.Length, 32);
 
             applyWaterPhysicsHandle.Complete();
