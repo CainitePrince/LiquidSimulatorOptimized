@@ -439,7 +439,8 @@ namespace WaterSimulation
 
         [BurstCompile]
         private struct ApplyWaterPhysics : IJobParallelFor
-        { //Apply modify values from calculatewaterphysics job
+        { 
+            //Apply modify values from calculatewaterphysics job
 
             [ReadOnly]
             public NativeArray<CellSimulationComponent> current; //Pre Mods

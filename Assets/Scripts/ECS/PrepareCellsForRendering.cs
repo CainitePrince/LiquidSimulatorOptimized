@@ -23,11 +23,6 @@ namespace WaterSimulation
             Entities.ForEach((ref CellSimulationComponent cellSimulationComponent, ref CellRenderComponent cellRenderComponent) =>
             {
                 cellRenderComponent.UV = new Vector4(cellSimulationComponent.Solid ? 2.0f : cellSimulationComponent.IsDownFlowingLiquid ? 1.0f : Mathf.Clamp01(cellSimulationComponent.Liquid), angle, 0.0f, 0.0f);
-
-                cellRenderComponent.Matrix = Matrix4x4.TRS(
-                    new Vector3(cellRenderComponent.WorldPos.x, cellRenderComponent.WorldPos.y, 0),
-                    Quaternion.identity,
-                    new Vector3(1.0f, 1.0f, 0.0f));
             }).Schedule();
         }
     }

@@ -74,16 +74,12 @@ namespace WaterSimulation
                 Camera.main.orthographicSize = ((float)GridHeight * _cellSize) / 2 * differenceInSize;
             }
 
-            //Grab Entity Manager
             _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
 
-            //Cell ArchType
             _cellArchetype = _entityManager.CreateArchetype(
-                //typeof(LocalToWorld),
                 typeof(CellSimulationComponent),
                 typeof(CellRenderComponent));
 
-            // Generate our grid
             CreateGrid();
         }
 
@@ -277,7 +273,6 @@ namespace WaterSimulation
                     //Calculate World Pos
                     float xpos = offset.x + (float)(x * _cellSize);
                     float ypos = offset.y - (float)(y * _cellSize);
-                    //float3 pos = new float3(xpos, ypos, 0);
 
                     //Calc Neighbors Indexes
                     TopIndices[index] = CalculateCellIndex(x - xBottom, y - yBottom);
@@ -299,7 +294,8 @@ namespace WaterSimulation
 
                     _entityManager.SetComponentData(cell, new CellRenderComponent 
                     {
-                        WorldPos = new float2(xpos, ypos)
+                        WorldPos = new float2(xpos, ypos),
+                        Matrix = Matrix4x4.TRS(new Vector3(xpos, ypos, 0), Quaternion.identity, new Vector3(1.0f, 1.0f, 0.0f))
                     });
 
                     //Add Cell to Array

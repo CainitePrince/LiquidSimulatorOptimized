@@ -15,6 +15,7 @@ namespace WaterSimulation
         private readonly List<List<Matrix4x4>> _matrices = new List<List<Matrix4x4>>();
         private readonly List<List<Vector4>> _uvs = new List<List<Vector4>>();
         private bool _allocated = false;
+        private bool _createdMatrixData = false;
 
         protected override void OnCreate()
         {
@@ -35,6 +36,7 @@ namespace WaterSimulation
 
             int sliceCount = 1023;
             
+            // Avoid allocating new dynamic arrays each frame.
             if (!_allocated)
             {
                 int count = (cellSpriteDataArray.Length / sliceCount) + 1;
@@ -47,20 +49,37 @@ namespace WaterSimulation
 
                 _allocated = true;
             }
-            
+
+            // The matrix data doesn't change, we can set this up once.
             int slice = 0;
+            if (!_createdMatrixData)
+            {
+                for (int i = 0; i < cellSpriteDataArray.Length; i += sliceCount)
+                {
+                    int sliceSize = math.min(cellSpriteDataArray.Length - i, sliceCount);
+
+                    for (int j = 0; j < sliceSize; j++)
+                    {
+                        CellRenderComponent cellComponentData = cellSpriteDataArray[i + j];
+                        _matrices[slice].Add(cellComponentData.Matrix);
+                    }
+
+                    slice++;
+                }
+                _createdMatrixData = true;
+            }
+
+            slice = 0;
             //Account for limitations of DrawMeshInstanced
             for (int i = 0; i < cellSpriteDataArray.Length; i += sliceCount)
             {
                 int sliceSize = math.min(cellSpriteDataArray.Length - i, sliceCount);
 
-                _matrices[slice].Clear();
                 _uvs[slice].Clear();
                 
                 for (int j = 0; j < sliceSize; j++)
                 {
                     CellRenderComponent cellComponentData = cellSpriteDataArray[i + j];
-                    _matrices[slice].Add(cellComponentData.Matrix);
                     _uvs[slice].Add(cellComponentData.UV);
                 }
 
