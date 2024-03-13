@@ -3,6 +3,7 @@ using UnityEngine;
 using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
+using Unity.Collections;
 
 namespace WaterSimulation
 {
@@ -40,6 +41,15 @@ namespace WaterSimulation
         private EntityManager _entityManager;
         private EntityArchetype _cellArchetype;
         private CellComponent _clickedCell;
+
+        public NativeArray<int> _topIndices;
+        public NativeArray<int> _bottomIndices;
+        public NativeArray<int> _leftIndices;
+        public NativeArray<int> _rightIndices;
+        public NativeArray<int> _bottomLeftIndices;
+        public NativeArray<int> _topLeftIndices;
+        public NativeArray<int> _topRightIndices;
+        public NativeArray<int> _bottomRightIndices;
 
         private static CreateTileMap _instance;
 
@@ -217,6 +227,17 @@ namespace WaterSimulation
             int xTopLeft = ToOffset(topLeft.x);
             int yTopLeft = ToOffset(topLeft.y);
 
+            int cellCount = GridWidth * GridHeight;
+
+            _topIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
+            _bottomIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
+            _leftIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
+            _rightIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
+            _bottomLeftIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
+            _topLeftIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
+            _topRightIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
+            _bottomRightIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
+
             //Create Entity TileMap
             _cells = new Entity[GridWidth * GridHeight];
 
@@ -247,43 +268,49 @@ namespace WaterSimulation
                     //Calculate World Pos
                     float xpos = offset.x + (float)(x * _cellSize);
                     float ypos = offset.y - (float)(y * _cellSize);
-                    float3 pos = new float3(xpos, ypos, 0);
-
-                    //Fill Position Data
-                    //_entityManager.SetComponentData(cell, new Translation
-                    //{
-                    //    Value = pos
-                    //});
+                    //float3 pos = new float3(xpos, ypos, 0);
 
                     //Calc Neighbors Indexes
                     int topIndex = CalculateCellIndex(x - xBottom, y - yBottom);
+                    _topIndices[index] = topIndex;
+
                     int leftIndex = CalculateCellIndex(x + xLeft, y + yLeft);
+                    _leftIndices[index] = leftIndex;
+
                     int rightIndex = CalculateCellIndex(x - xLeft, y - yLeft);
+                    _rightIndices[index] = rightIndex;
+
                     int bottomIndex = CalculateCellIndex(x + xBottom, y + yBottom);
+                    _bottomIndices[index] = bottomIndex;
+
                     int bottomLeftIndex = CalculateCellIndex(x + xBottomLeft, y + yBottomLeft);
+                    _bottomLeftIndices[index] = bottomLeftIndex;
+
                     int topLeftIndex = CalculateCellIndex(x + xTopLeft, y + yTopLeft);
+                    _topLeftIndices[index] = topLeftIndex;
+
                     int topRightIndex = CalculateCellIndex(x - xBottomLeft, y - yBottomLeft);
+                    _topRightIndices[index] = topRightIndex;
+
                     int bottomRightIndex = CalculateCellIndex(x - xTopLeft, y - yTopLeft);
+                    _bottomRightIndices[index] = bottomRightIndex;
 
                     //Set CellComponent Data
                     _entityManager.SetComponentData(cell, new CellComponent
                     {
-                        //xGrid = x,
-                        //yGrid = y,
-                        Solid = isWall, //Solid
+                        Solid = isWall,
                         WorldPos = new float2(xpos, ypos),
                         CellSize = _cellSize,
                         Liquid = 0f,
                         Settled = false,
-                        //index = index,
-                        LeftIndex = leftIndex,
-                        RightIndex = rightIndex,
-                        BottomIndex = bottomIndex,
-                        TopIndex = topIndex,
-                        BottomLeftIndex = bottomLeftIndex,
-                        TopLeftIndex = topLeftIndex,
-                        TopRightIndex = topRightIndex,
-                        BottomRightIndex = bottomRightIndex,
+                        //LeftIndex = leftIndex,
+                        //RightIndex = rightIndex,
+                        //BottomIndex = bottomIndex,
+                        //TopIndex = topIndex,
+                        //BottomLeftIndex = bottomLeftIndex,
+                        //TopLeftIndex = topLeftIndex,
+                        //TopRightIndex = topRightIndex,
+                        //BottomRightIndex = bottomRightIndex,
                     });
 
                     //Add Cell to Array

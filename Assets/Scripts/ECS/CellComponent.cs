@@ -18,7 +18,7 @@ namespace WaterSimulation
         public int SettleCount;
 
         public float Liquid;
-
+        /*
         //Neighbor Cells
         public int BottomIndex;
         public int TopIndex;
@@ -28,7 +28,7 @@ namespace WaterSimulation
         public int TopLeftIndex;
         public int TopRightIndex;
         public int BottomRightIndex;
-
+        */
         //Values stored for modifying self and neighbor
         public float ModifySelf;
         public float ModifyBottom;
