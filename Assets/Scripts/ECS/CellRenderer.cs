@@ -4,55 +4,79 @@ using Unity.Entities;
 using Unity.Collections;
 using Unity.Mathematics;
 
-[UpdateAfter(typeof(PrepareForRenderJob))]
-public class CellRenderer : SystemBase
+namespace WaterSimulation
 {
-    private EntityQuery _entityQuery;
-    private int _valuesShaderProperty;
-    private MaterialPropertyBlock _materialPropertyBlock;
-
-    protected override void OnCreate()
+    [UpdateAfter(typeof(PrepareCellsForRendering))]
+    public partial class CellRenderer : SystemBase
     {
-        base.OnCreate();
+        private EntityQuery _entityQuery;
+        private int _valuesShaderProperty;
+        private MaterialPropertyBlock _materialPropertyBlock;
+        private readonly List<List<Matrix4x4>> _matrices = new List<List<Matrix4x4>>();
+        private readonly List<List<Vector4>> _uvs = new List<List<Vector4>>();
+        private bool _allocated = false;
 
-        _valuesShaderProperty = Shader.PropertyToID("_Values");
-        _materialPropertyBlock = new MaterialPropertyBlock();
-    }
-
-    protected override void OnUpdate()
-    {
-        _entityQuery = GetEntityQuery(ComponentType.ReadOnly<CellComponent>());
-
-        NativeArray<CellComponent> cellSpriteDataArray = _entityQuery.ToComponentDataArray<CellComponent>(Allocator.TempJob);
-
-        Material SpriteSheetMat = CreateTileMap.GetInstance().WaterMaterial;
-        Mesh mesh = CreateTileMap.GetInstance().QuadMesh;
-        
-        //Account for limitations of DrawMeshInstanced
-        int sliceCount = 1023;
-        for (int i = 0; i < cellSpriteDataArray.Length; i += sliceCount)
+        protected override void OnCreate()
         {
-            int sliceSize = math.min(cellSpriteDataArray.Length - i, sliceCount);
+            base.OnCreate();
 
-            List<Matrix4x4> matrixList = new List<Matrix4x4>();
-            List<Vector4> uvList = new List<Vector4>();
-            for (int j = 0; j < sliceSize; j++)
+            _valuesShaderProperty = Shader.PropertyToID("_Values");
+            _materialPropertyBlock = new MaterialPropertyBlock();
+        }
+
+        protected override void OnUpdate()
+        {
+            _entityQuery = GetEntityQuery(ComponentType.ReadOnly<CellComponent>());
+
+            NativeArray<CellComponent> cellSpriteDataArray = _entityQuery.ToComponentDataArray<CellComponent>(Allocator.TempJob);
+
+            Material SpriteSheetMat = CreateTileMap.GetInstance().WaterMaterial;
+            Mesh mesh = CreateTileMap.GetInstance().QuadMesh;
+
+            int sliceCount = 1023;
+            
+            if (!_allocated)
             {
-                CellComponent cellComponentData = cellSpriteDataArray[i + j];
-                matrixList.Add(cellComponentData.Matrix);
-                uvList.Add(cellComponentData.UV);
+                int count = (cellSpriteDataArray.Length / sliceCount) + 1;
+
+                for (int i = 0; i < count; ++i)
+                {
+                    _matrices.Add(new List<Matrix4x4>());
+                    _uvs.Add(new List<Vector4>());
+                }
+
+                _allocated = true;
+            }
+            
+            int slice = 0;
+            //Account for limitations of DrawMeshInstanced
+            for (int i = 0; i < cellSpriteDataArray.Length; i += sliceCount)
+            {
+                int sliceSize = math.min(cellSpriteDataArray.Length - i, sliceCount);
+
+                _matrices[slice].Clear();
+                _uvs[slice].Clear();
+                
+                for (int j = 0; j < sliceSize; j++)
+                {
+                    CellComponent cellComponentData = cellSpriteDataArray[i + j];
+                    _matrices[slice].Add(cellComponentData.Matrix);
+                    _uvs[slice].Add(cellComponentData.UV);
+                }
+
+                _materialPropertyBlock.SetVectorArray(_valuesShaderProperty, _uvs[slice]);
+
+                Graphics.DrawMeshInstanced(
+                    mesh,
+                    0,
+                    SpriteSheetMat,
+                    _matrices[slice],
+                    _materialPropertyBlock);
+
+                slice++;
             }
 
-            _materialPropertyBlock.SetVectorArray(_valuesShaderProperty, uvList);
-
-            Graphics.DrawMeshInstanced(
-                mesh,
-                0,
-                SpriteSheetMat,
-                matrixList,
-                _materialPropertyBlock);
-         }
-
-        cellSpriteDataArray.Dispose();
+            cellSpriteDataArray.Dispose();
+        }
     }
 }
