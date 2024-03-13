@@ -1,16 +1,9 @@
-﻿using UnityEngine;
-using Unity.Entities;
+﻿using Unity.Entities;
 
 namespace WaterSimulation
 {
-    public struct CellComponent : IComponentData
+    public struct CellSimulationComponent : IComponentData
     {
-        public Matrix4x4 Matrix;
-        public Vector4 UV;
-
-        //World Pos
-        public Unity.Mathematics.float2 WorldPos;
-
         //Check is Water is settled
         public int SettleCount;
 

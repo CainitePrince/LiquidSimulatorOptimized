@@ -26,12 +26,14 @@ namespace WaterSimulation
 
         protected override void OnUpdate()
         {
-            _entityQuery = GetEntityQuery(ComponentType.ReadOnly<CellComponent>());
+            //_entityQuery = GetEntityQuery(ComponentType.ReadOnly<CellSimulationComponent>());
+            _entityQuery = GetEntityQuery(ComponentType.ReadOnly<CellRenderComponent>());
 
-            NativeArray<CellComponent> cellSpriteDataArray = _entityQuery.ToComponentDataArray<CellComponent>(Allocator.TempJob);
+            //NativeArray<CellSimulationComponent> cellSpriteDataArray = _entityQuery.ToComponentDataArray<CellSimulationComponent>(Allocator.TempJob);
+            NativeArray<CellRenderComponent> cellSpriteDataArray = _entityQuery.ToComponentDataArray<CellRenderComponent>(Allocator.TempJob);
 
-            Material SpriteSheetMat = CreateTileMap.GetInstance().WaterMaterial;
-            Mesh mesh = CreateTileMap.GetInstance().QuadMesh;
+            Material SpriteSheetMat = WaterSimulationGrid.GetInstance().WaterMaterial;
+            Mesh mesh = WaterSimulationGrid.GetInstance().QuadMesh;
 
             int sliceCount = 1023;
             
@@ -59,7 +61,8 @@ namespace WaterSimulation
                 
                 for (int j = 0; j < sliceSize; j++)
                 {
-                    CellComponent cellComponentData = cellSpriteDataArray[i + j];
+                    //CellSimulationComponent cellComponentData = cellSpriteDataArray[i + j];
+                    CellRenderComponent cellComponentData = cellSpriteDataArray[i + j];
                     _matrices[slice].Add(cellComponentData.Matrix);
                     _uvs[slice].Add(cellComponentData.UV);
                 }

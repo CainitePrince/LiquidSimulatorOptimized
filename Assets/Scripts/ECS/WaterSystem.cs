@@ -13,13 +13,13 @@ namespace WaterSimulation
         protected override void OnUpdate()
         {
             //Get Entity Query of CellComponents
-            entityQuery = GetEntityQuery(ComponentType.ReadOnly<CellComponent>());
+            entityQuery = GetEntityQuery(ComponentType.ReadOnly<CellSimulationComponent>());
 
             //Create Readable Current Array
-            NativeArray<CellComponent> current = entityQuery.ToComponentDataArray<CellComponent>(Allocator.TempJob);
+            NativeArray<CellSimulationComponent> current = entityQuery.ToComponentDataArray<CellSimulationComponent>(Allocator.TempJob);
 
             //Create Writable next(Future) Array
-            var next = new NativeArray<CellComponent>(current.Length, Allocator.TempJob);
+            var next = new NativeArray<CellSimulationComponent>(current.Length, Allocator.TempJob);
 
             //Set next = current to preserve data
             next.CopyFrom(current);
@@ -38,7 +38,7 @@ namespace WaterSimulation
             // Adjusts flow speed (0.0f - 1.0f)
             float FlowSpeed = 1f;
 
-            var tiles = CreateTileMap.GetInstance();
+            var tiles = WaterSimulationGrid.GetInstance();
 
             //Grid Width of Map
             int GridWidth = tiles.GridWidth;
@@ -55,7 +55,6 @@ namespace WaterSimulation
                 MaxFlow = MaxFlow,
                 FlowSpeed = FlowSpeed,
                 GridWidth = GridWidth,
-
                 TopIndices = tiles.TopIndices,
                 LeftIndices = tiles.LeftIndices,
                 RightIndices = tiles.RightIndices,
@@ -64,7 +63,7 @@ namespace WaterSimulation
                 TopLeftIndices = tiles.TopLeftIndices,
                 TopRightIndices = tiles.TopRightIndices,
                 BottomRightIndices = tiles.BottomRightIndices
-        }.Schedule(current.Length, 32);
+            }.Schedule(current.Length, 32);
 
             //Complete Physics Job
             calculateWaterPhysicsHandle.Complete();
@@ -101,10 +100,10 @@ namespace WaterSimulation
             //Calculate water physics and then save them in the next array
 
             [ReadOnly]
-            public NativeArray<CellComponent> current;
+            public NativeArray<CellSimulationComponent> current;
 
             [WriteOnly]
-            public NativeArray<CellComponent> next;
+            public NativeArray<CellSimulationComponent> next;
 
             [ReadOnly] public NativeArray<int> TopIndices;
             [ReadOnly] public NativeArray<int> LeftIndices;
@@ -134,12 +133,9 @@ namespace WaterSimulation
                 if (current[index].Liquid < MinLiquid) 
                 {
                     //Set to completely Empty
-                    next[index] = new CellComponent
+                    next[index] = new CellSimulationComponent
                     {
                         Solid = current[index].Solid,
-                        UV = current[index].UV,
-                        Matrix = current[index].Matrix,
-                        WorldPos = current[index].WorldPos,
                         Settled = current[index].Settled,
                         SettleCount = current[index].SettleCount,
                         Liquid = 0,
@@ -196,12 +192,9 @@ namespace WaterSimulation
                 {
                     //Not enough Liquid
                     modifySelf -= remainingLiquid;
-                    next[index] = new CellComponent
+                    next[index] = new CellSimulationComponent
                     {
                         Solid = current[index].Solid,
-                        UV = current[index].UV,
-                        Matrix = current[index].Matrix,
-                        WorldPos = current[index].WorldPos,
                         Settled = current[index].Settled,
                         SettleCount = current[index].SettleCount,
                         Liquid = current[index].Liquid,
@@ -250,12 +243,12 @@ namespace WaterSimulation
                 {
                     //Not enough Liquid
                     modifySelf -= remainingLiquid;
-                    next[index] = new CellComponent
+                    next[index] = new CellSimulationComponent
                     {
                         Solid = current[index].Solid,
-                        UV = current[index].UV,
-                        Matrix = current[index].Matrix,
-                        WorldPos = current[index].WorldPos,
+                        //UV = current[index].UV,
+                        //Matrix = current[index].Matrix,
+                        //WorldPos = current[index].WorldPos,
                         Settled = current[index].Settled,
                         SettleCount = current[index].SettleCount,
                         Liquid = current[index].Liquid,
@@ -303,12 +296,12 @@ namespace WaterSimulation
                 {
                     //Not enough Liquid
                     modifySelf -= remainingLiquid;
-                    next[index] = new CellComponent
+                    next[index] = new CellSimulationComponent
                     {
                         Solid = current[index].Solid,
-                        UV = current[index].UV,
-                        Matrix = current[index].Matrix,
-                        WorldPos = current[index].WorldPos,
+                        //UV = current[index].UV,
+                        //Matrix = current[index].Matrix,
+                        //WorldPos = current[index].WorldPos,
                         Settled = current[index].Settled,
                         SettleCount = current[index].SettleCount,
                         Liquid = current[index].Liquid,
@@ -352,12 +345,12 @@ namespace WaterSimulation
                 if (remainingLiquid < MinLiquid)
                 {
                     modifySelf -= remainingLiquid;
-                    next[index] = new CellComponent
+                    next[index] = new CellSimulationComponent
                     {
                         Solid = current[index].Solid,
-                        UV = current[index].UV,
-                        Matrix = current[index].Matrix,
-                        WorldPos = current[index].WorldPos,
+                        //UV = current[index].UV,
+                        //Matrix = current[index].Matrix,
+                        //WorldPos = current[index].WorldPos,
                         Settled = current[index].Settled,
                         SettleCount = current[index].SettleCount,
                         Liquid = current[index].Liquid,
@@ -402,12 +395,12 @@ namespace WaterSimulation
                 if (remainingLiquid < MinLiquid)
                 {
                     modifySelf -= remainingLiquid;
-                    next[index] = new CellComponent
+                    next[index] = new CellSimulationComponent
                     {
                         Solid = current[index].Solid,
-                        UV = current[index].UV,
-                        Matrix = current[index].Matrix,
-                        WorldPos = current[index].WorldPos,
+                        //UV = current[index].UV,
+                        //Matrix = current[index].Matrix,
+                        //WorldPos = current[index].WorldPos,
                         Settled = current[index].Settled,
                         SettleCount = current[index].SettleCount,
                         Liquid = current[index].Liquid,
@@ -423,12 +416,12 @@ namespace WaterSimulation
                 }
 
                 //Update Cell Changes
-                next[index] = new CellComponent
+                next[index] = new CellSimulationComponent
                 {
                     Solid = current[index].Solid,
-                    UV = current[index].UV,
-                    Matrix = current[index].Matrix,
-                    WorldPos = current[index].WorldPos,
+                    //UV = current[index].UV,
+                    //Matrix = current[index].Matrix,
+                    //WorldPos = current[index].WorldPos,
                     Settled = current[index].Settled,
                     SettleCount = current[index].SettleCount,
                     Liquid = current[index].Liquid,
@@ -471,9 +464,9 @@ namespace WaterSimulation
         { //Apply modify values from calculatewaterphysics job
 
             [ReadOnly]
-            public NativeArray<CellComponent> current; //Pre Mods
+            public NativeArray<CellSimulationComponent> current; //Pre Mods
             [WriteOnly]
-            public NativeArray<CellComponent> next; //Applied Mods
+            public NativeArray<CellSimulationComponent> next; //Applied Mods
 
             [ReadOnly] public NativeArray<int> TopIndices;
             [ReadOnly] public NativeArray<int> LeftIndices;
@@ -538,13 +531,13 @@ namespace WaterSimulation
                 }
 
                 //Assign all new values
-                next[index] = new CellComponent
+                next[index] = new CellSimulationComponent
                 {
                     Solid = current[index].Solid,
-                    UV = current[index].UV,
-                    Matrix = current[index].Matrix,
+                    //UV = current[index].UV,
+                    //Matrix = current[index].Matrix,
                     IsDownFlowingLiquid = isDownFlowing,
-                    WorldPos = current[index].WorldPos,
+                    //WorldPos = current[index].WorldPos,
                     Settled = Settled,
                     SettleCount = SettleCount,
                     Liquid = modifiedLiquid,

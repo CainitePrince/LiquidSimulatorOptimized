@@ -198,7 +198,7 @@ GameObject:
   - component: {fileID: 1379555689}
   - component: {fileID: 1379555688}
   m_Layer: 0
-  m_Name: TileMap
+  m_Name: WaterSimulationGrid
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -216,8 +216,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5db8f7b10b0cb4b47ae01f035708d7a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GridWidth: 260
-  GridHeight: 260
+  GridWidth: 300
+  GridHeight: 300
   QuadMesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
   WaterMaterial: {fileID: 2100000, guid: dbed33f450077dd4ebe77b0f0a62536c, type: 2}
   _liquidPerClick: 5

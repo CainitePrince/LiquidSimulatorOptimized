@@ -25,7 +25,7 @@ namespace WaterSimulation
     /// <summary>
     /// 
     /// </summary>
-    public class CreateTileMap : MonoBehaviour
+    public class WaterSimulationGrid : MonoBehaviour
     {
         public int GridWidth = 80;
         public int GridHeight = 40;
@@ -40,19 +40,19 @@ namespace WaterSimulation
         public NativeArray<int> TopRightIndices;
         public NativeArray<int> BottomRightIndices;
 
-        [SerializeField] private int _liquidPerClick = 5; //Liquid placed when clicked
+        [SerializeField] private int _liquidPerClick = 5;
         [SerializeField] private GravityEnum _gravity = GravityEnum.Down;
 
         private Entity[] _cells;
         private bool _fill;
         private EntityManager _entityManager;
         private EntityArchetype _cellArchetype;
-        private CellComponent _clickedCell;
+        private CellSimulationComponent _clickedCell;
         private float _cellSize = 1.0f;
 
-        private static CreateTileMap _instance;
+        private static WaterSimulationGrid _instance;
 
-        public static CreateTileMap GetInstance()
+        public static WaterSimulationGrid GetInstance()
         {
             return _instance;
         }
@@ -80,7 +80,8 @@ namespace WaterSimulation
             //Cell ArchType
             _cellArchetype = _entityManager.CreateArchetype(
                 typeof(LocalToWorld),
-                typeof(CellComponent));
+                typeof(CellSimulationComponent),
+                typeof(CellRenderComponent));
 
             // Generate our grid
             CreateGrid();
@@ -117,7 +118,7 @@ namespace WaterSimulation
                 if ((x > 0 && x < GridWidth) && (y > 0 && y < GridHeight))
                 {
                     //Click is inside grid, grab cell component data
-                    _clickedCell = _entityManager.GetComponentData<CellComponent>(_cells[CalculateCellIndex(x, y)]);
+                    _clickedCell = _entityManager.GetComponentData<CellSimulationComponent>(_cells[CalculateCellIndex(x, y)]);
                     if (!_clickedCell.Solid)
                     {
                         _fill = true;
@@ -136,7 +137,7 @@ namespace WaterSimulation
                 {
                     if ((x > 0 && x < GridWidth) && (y > 0 && y < GridHeight))
                     {
-                        _clickedCell = _entityManager.GetComponentData<CellComponent>(_cells[CalculateCellIndex(x, y)]);
+                        _clickedCell = _entityManager.GetComponentData<CellSimulationComponent>(_cells[CalculateCellIndex(x, y)]);
                         if (_fill)
                         {
                             _clickedCell.Solid = true;
@@ -156,7 +157,7 @@ namespace WaterSimulation
             // Right click places liquid
             if (Input.GetMouseButton(1))
             {
-                _clickedCell = _entityManager.GetComponentData<CellComponent>(_cells[CalculateCellIndex(x, y)]);
+                _clickedCell = _entityManager.GetComponentData<CellSimulationComponent>(_cells[CalculateCellIndex(x, y)]);
                 if ((x > 0 && x < GridWidth - 1) && (y > 0 && y < GridHeight - 1))
                 {
                     _clickedCell.Solid = false;
@@ -304,12 +305,16 @@ namespace WaterSimulation
                     BottomRightIndices[index] = bottomRightIndex;
 
                     //Set CellComponent Data
-                    _entityManager.SetComponentData(cell, new CellComponent
+                    _entityManager.SetComponentData(cell, new CellSimulationComponent
                     {
                         Solid = isWall,
-                        WorldPos = new float2(xpos, ypos),
                         Liquid = 0f,
                         Settled = false,
+                    });
+
+                    _entityManager.SetComponentData(cell, new CellRenderComponent 
+                    {
+                        WorldPos = new float2(xpos, ypos)
                     });
 
                     //Add Cell to Array
