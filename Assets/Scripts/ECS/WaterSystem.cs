@@ -6,11 +6,10 @@ using UnityEngine;
 
 namespace WaterSimulation
 {
-    public partial class LiquidSimulator : SystemBase//JobComponentSystem
+    public partial class LiquidSimulator : SystemBase
     {
         private EntityQuery entityQuery;
 
-        //protected override JobHandle OnUpdate(JobHandle inputDeps)
         protected override void OnUpdate()
         {
 
@@ -55,11 +54,9 @@ namespace WaterSimulation
                 MaxFlow = MaxFlow,
                 FlowSpeed = FlowSpeed,
                 GridWidth = GridWidth,
-                //deltaTime = Time.DeltaTime //Delta Time is applied to Flow
             }.Schedule(current.Length, 32);
 
             //Complete Physics Job
-            //inputDeps.Complete();
             calculateWaterPhysicsHandle.Complete();
 
             //Make Current = Water Physics Job's Next array
@@ -72,7 +69,6 @@ namespace WaterSimulation
                 next = next
             }.Schedule(current.Length, 32);
 
-            //inputDeps.Complete();
             applyWaterPhysicsHandle.Complete();
 
             //Update Entities
@@ -81,8 +77,6 @@ namespace WaterSimulation
             //Clean Native Arrays
             current.Dispose();
             next.Dispose();
-
-            //return inputDeps;
         }
 
         [BurstCompile]
@@ -98,7 +92,6 @@ namespace WaterSimulation
 
             public float MaxLiquid;
             public float MinLiquid;
-            //public float deltaTime;
             public float MaxCompression;
             public float MinFlow;
             public float MaxFlow;
@@ -118,13 +111,9 @@ namespace WaterSimulation
                     next[index] = new CellComponent
                     {
                         Solid = current[index].Solid,
-                        //SpriteSheetFrame = 0, //Empty Sprite
                         UV = current[index].UV,
                         Matrix = current[index].Matrix,
                         CellSize = current[index].CellSize,
-                        xGrid = current[index].xGrid,
-                        yGrid = current[index].yGrid,
-                        index = current[index].index,
                         WorldPos = current[index].WorldPos,
                         Settled = current[index].Settled,
                         SettleCount = current[index].SettleCount,
@@ -139,12 +128,9 @@ namespace WaterSimulation
                         BottomRightIndex = current[index].BottomRightIndex,
                         ModifySelf = 0,
                         ModifyBottom = 0,
-                        //ModifyTop = 0,
                         ModifyLeft = 0,
                         ModifyRight = 0,
                         ModifyBottomLeft = 0,
-                        //ModifyUpLeft = 0,
-                        //ModifyUpRight = 0,
                         ModifyBottomRight = 0
                     };
                     return;
@@ -159,8 +145,8 @@ namespace WaterSimulation
                 float modifyLeft = 0;
                 float modifyRight = 0;
                 float modifyBottomLeft = 0;
-                float modifyTopLeft = 0;
-                float modifyTopRight = 0;
+                //float modifyTopLeft = 0;
+                //float modifyTopRight = 0;
                 float modifyBottomRight = 0;
 
                 // Flow to bottom cell
@@ -196,13 +182,9 @@ namespace WaterSimulation
                     next[index] = new CellComponent
                     {
                         Solid = current[index].Solid,
-                        //SpriteSheetFrame = 0, //Empty
                         UV = current[index].UV,
                         Matrix = current[index].Matrix,
                         CellSize = current[index].CellSize,
-                        xGrid = current[index].xGrid,
-                        yGrid = current[index].yGrid,
-                        index = current[index].index,
                         WorldPos = current[index].WorldPos,
                         Settled = current[index].Settled,
                         SettleCount = current[index].SettleCount,
@@ -266,13 +248,9 @@ namespace WaterSimulation
                     next[index] = new CellComponent
                     {
                         Solid = current[index].Solid,
-                        //SpriteSheetFrame = 0, //Empty
                         UV = current[index].UV,
                         Matrix = current[index].Matrix,
                         CellSize = current[index].CellSize,
-                        xGrid = current[index].xGrid,
-                        yGrid = current[index].yGrid,
-                        index = current[index].index,
                         WorldPos = current[index].WorldPos,
                         Settled = current[index].Settled,
                         SettleCount = current[index].SettleCount,
@@ -335,13 +313,9 @@ namespace WaterSimulation
                     next[index] = new CellComponent
                     {
                         Solid = current[index].Solid,
-                        //SpriteSheetFrame = 0, //Empty
                         UV = current[index].UV,
                         Matrix = current[index].Matrix,
                         CellSize = current[index].CellSize,
-                        xGrid = current[index].xGrid,
-                        yGrid = current[index].yGrid,
-                        index = current[index].index,
                         WorldPos = current[index].WorldPos,
                         Settled = current[index].Settled,
                         SettleCount = current[index].SettleCount,
@@ -399,13 +373,9 @@ namespace WaterSimulation
                     next[index] = new CellComponent
                     {
                         Solid = current[index].Solid,
-                        //SpriteSheetFrame = 0, //Empty
                         UV = current[index].UV,
                         Matrix = current[index].Matrix,
                         CellSize = current[index].CellSize,
-                        xGrid = current[index].xGrid,
-                        yGrid = current[index].yGrid,
-                        index = current[index].index,
                         WorldPos = current[index].WorldPos,
                         Settled = current[index].Settled,
                         SettleCount = current[index].SettleCount,
@@ -464,13 +434,9 @@ namespace WaterSimulation
                     next[index] = new CellComponent
                     {
                         Solid = current[index].Solid,
-                        //SpriteSheetFrame = 0, //Empty
                         UV = current[index].UV,
                         Matrix = current[index].Matrix,
                         CellSize = current[index].CellSize,
-                        xGrid = current[index].xGrid,
-                        yGrid = current[index].yGrid,
-                        index = current[index].index,
                         WorldPos = current[index].WorldPos,
                         Settled = current[index].Settled,
                         SettleCount = current[index].SettleCount,
@@ -562,13 +528,9 @@ namespace WaterSimulation
                 next[index] = new CellComponent
                 {
                     Solid = current[index].Solid,
-                    //SpriteSheetFrame = 1, //Water
                     UV = current[index].UV,
                     Matrix = current[index].Matrix,
                     CellSize = current[index].CellSize,
-                    xGrid = current[index].xGrid,
-                    yGrid = current[index].yGrid,
-                    index = current[index].index,
                     WorldPos = current[index].WorldPos,
                     Settled = current[index].Settled,
                     SettleCount = current[index].SettleCount,
@@ -674,7 +636,6 @@ namespace WaterSimulation
                 }
 
                 //Fill out water cells with cells above them
-                //Calculated here and implemented in SpriteSheetCalculations with offsetY
                 bool isDownFlowing = false;
                 if (current[index].Liquid > 0.005f)
                 {
@@ -696,9 +657,6 @@ namespace WaterSimulation
                     Matrix = current[index].Matrix,
                     IsDownFlowingLiquid = isDownFlowing,
                     CellSize = current[index].CellSize,
-                    xGrid = current[index].xGrid,
-                    yGrid = current[index].yGrid,
-                    index = current[index].index,
                     WorldPos = current[index].WorldPos,
                     Settled = Settled,
                     SettleCount = SettleCount,

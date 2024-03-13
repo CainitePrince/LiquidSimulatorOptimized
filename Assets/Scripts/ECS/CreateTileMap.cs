@@ -268,14 +268,14 @@ namespace WaterSimulation
                     //Set CellComponent Data
                     _entityManager.SetComponentData(cell, new CellComponent
                     {
-                        xGrid = x,
-                        yGrid = y,
+                        //xGrid = x,
+                        //yGrid = y,
                         Solid = isWall, //Solid
                         WorldPos = new float2(xpos, ypos),
                         CellSize = _cellSize,
                         Liquid = 0f,
                         Settled = false,
-                        index = index,
+                        //index = index,
                         LeftIndex = leftIndex,
                         RightIndex = rightIndex,
                         BottomIndex = bottomIndex,

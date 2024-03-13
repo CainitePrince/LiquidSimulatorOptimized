@@ -14,11 +14,6 @@ namespace WaterSimulation
         //CellSize
         public float CellSize;
 
-        //Grid Pos & index
-        public int xGrid;
-        public int yGrid;
-        public int index;
-
         //Check is Water is settled
         public int SettleCount;
 
@@ -41,11 +36,8 @@ namespace WaterSimulation
         public float ModifyLeft;
         public float ModifyRight;
         public float ModifyBottomLeft;
-        //public float ModifyUpLeft;
-        //public float ModifyUpRight;
         public float ModifyBottomRight;
 
-        //Empty(0) or Solid(1)
         public bool Solid;
         public bool Settled;
         public bool IsDownFlowingLiquid;
