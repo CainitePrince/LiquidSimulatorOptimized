@@ -3,6 +3,7 @@ using UnityEngine;
 using Unity.Entities;
 using Unity.Transforms;
 using Unity.Mathematics;
+using Unity.Collections;
 
 namespace WaterSimulation
 {
@@ -24,26 +25,34 @@ namespace WaterSimulation
     /// <summary>
     /// 
     /// </summary>
-    public class CreateTileMap : MonoBehaviour
+    public class WaterSimulationGrid : MonoBehaviour
     {
         public int GridWidth = 80;
         public int GridHeight = 40;
         public Mesh QuadMesh;
         public Material WaterMaterial;
+        public NativeArray<int> TopIndices;
+        public NativeArray<int> BottomIndices;
+        public NativeArray<int> LeftIndices;
+        public NativeArray<int> RightIndices;
+        public NativeArray<int> BottomLeftIndices;
+        public NativeArray<int> TopLeftIndices;
+        public NativeArray<int> TopRightIndices;
+        public NativeArray<int> BottomRightIndices;
 
-        [SerializeField] private int _liquidPerClick = 5; //Liquid placed when clicked
+        [SerializeField] private int _liquidPerClick = 5;
         [SerializeField] private GravityEnum _gravity = GravityEnum.Down;
-        [SerializeField] private float _cellSize = 1;
 
         private Entity[] _cells;
         private bool _fill;
         private EntityManager _entityManager;
         private EntityArchetype _cellArchetype;
-        private CellComponent _clickedCell;
+        private CellSimulationComponent _clickedCell;
+        private float _cellSize = 1.0f;
 
-        private static CreateTileMap _instance;
+        private static WaterSimulationGrid _instance;
 
-        public static CreateTileMap GetInstance()
+        public static WaterSimulationGrid GetInstance()
         {
             return _instance;
         }
@@ -65,19 +74,25 @@ namespace WaterSimulation
                 Camera.main.orthographicSize = ((float)GridHeight * _cellSize) / 2 * differenceInSize;
             }
 
-            //Grab Entity Manager
             _entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
 
-            //Cell ArchType
             _cellArchetype = _entityManager.CreateArchetype(
-                typeof(LocalToWorld),
-                //typeof(Unity.Transforms. Translation),
-                //typeof(Rotation),
-                //typeof(NonUniformScale),
-                typeof(CellComponent));
+                typeof(CellSimulationComponent),
+                typeof(CellRenderComponent));
 
-            // Generate our grid
             CreateGrid();
+        }
+
+        private void OnDestroy()
+        {
+            TopIndices.Dispose();
+            BottomIndices.Dispose();
+            LeftIndices.Dispose();
+            RightIndices.Dispose();
+            BottomLeftIndices.Dispose();
+            TopLeftIndices.Dispose();
+            TopRightIndices.Dispose();
+            BottomRightIndices.Dispose();
         }
 
         void Update()
@@ -99,7 +114,7 @@ namespace WaterSimulation
                 if ((x > 0 && x < GridWidth) && (y > 0 && y < GridHeight))
                 {
                     //Click is inside grid, grab cell component data
-                    _clickedCell = _entityManager.GetComponentData<CellComponent>(_cells[CalculateCellIndex(x, y)]);
+                    _clickedCell = _entityManager.GetComponentData<CellSimulationComponent>(_cells[CalculateCellIndex(x, y)]);
                     if (!_clickedCell.Solid)
                     {
                         _fill = true;
@@ -118,7 +133,7 @@ namespace WaterSimulation
                 {
                     if ((x > 0 && x < GridWidth) && (y > 0 && y < GridHeight))
                     {
-                        _clickedCell = _entityManager.GetComponentData<CellComponent>(_cells[CalculateCellIndex(x, y)]);
+                        _clickedCell = _entityManager.GetComponentData<CellSimulationComponent>(_cells[CalculateCellIndex(x, y)]);
                         if (_fill)
                         {
                             _clickedCell.Solid = true;
@@ -138,7 +153,7 @@ namespace WaterSimulation
             // Right click places liquid
             if (Input.GetMouseButton(1))
             {
-                _clickedCell = _entityManager.GetComponentData<CellComponent>(_cells[CalculateCellIndex(x, y)]);
+                _clickedCell = _entityManager.GetComponentData<CellSimulationComponent>(_cells[CalculateCellIndex(x, y)]);
                 if ((x > 0 && x < GridWidth - 1) && (y > 0 && y < GridHeight - 1))
                 {
                     _clickedCell.Solid = false;
@@ -217,6 +232,17 @@ namespace WaterSimulation
             int xTopLeft = ToOffset(topLeft.x);
             int yTopLeft = ToOffset(topLeft.y);
 
+            int cellCount = GridWidth * GridHeight;
+
+            TopIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
+            BottomIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
+            LeftIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
+            RightIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
+            BottomLeftIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
+            TopLeftIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
+            TopRightIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
+            BottomRightIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
+
             //Create Entity TileMap
             _cells = new Entity[GridWidth * GridHeight];
 
@@ -247,43 +273,28 @@ namespace WaterSimulation
                     //Calculate World Pos
                     float xpos = offset.x + (float)(x * _cellSize);
                     float ypos = offset.y - (float)(y * _cellSize);
-                    float3 pos = new float3(xpos, ypos, 0);
-
-                    //Fill Position Data
-                    //_entityManager.SetComponentData(cell, new Translation
-                    //{
-                    //    Value = pos
-                    //});
 
                     //Calc Neighbors Indexes
-                    int topIndex = CalculateCellIndex(x - xBottom, y - yBottom);
-                    int leftIndex = CalculateCellIndex(x + xLeft, y + yLeft);
-                    int rightIndex = CalculateCellIndex(x - xLeft, y - yLeft);
-                    int bottomIndex = CalculateCellIndex(x + xBottom, y + yBottom);
-                    int bottomLeftIndex = CalculateCellIndex(x + xBottomLeft, y + yBottomLeft);
-                    int topLeftIndex = CalculateCellIndex(x + xTopLeft, y + yTopLeft);
-                    int topRightIndex = CalculateCellIndex(x - xBottomLeft, y - yBottomLeft);
-                    int bottomRightIndex = CalculateCellIndex(x - xTopLeft, y - yTopLeft);
+                    TopIndices[index] = CalculateCellIndex(x - xBottom, y - yBottom);
+                    LeftIndices[index] = CalculateCellIndex(x + xLeft, y + yLeft);
+                    RightIndices[index] = CalculateCellIndex(x - xLeft, y - yLeft);
+                    BottomIndices[index] = CalculateCellIndex(x + xBottom, y + yBottom);
+                    BottomLeftIndices[index] = CalculateCellIndex(x + xBottomLeft, y + yBottomLeft);
+                    TopLeftIndices[index] = CalculateCellIndex(x + xTopLeft, y + yTopLeft);
+                    TopRightIndices[index] = CalculateCellIndex(x - xBottomLeft, y - yBottomLeft);
+                    BottomRightIndices[index] = CalculateCellIndex(x - xTopLeft, y - yTopLeft);
 
                     //Set CellComponent Data
-                    _entityManager.SetComponentData(cell, new CellComponent
+                    _entityManager.SetComponentData(cell, new CellSimulationComponent
                     {
-                        //xGrid = x,
-                        //yGrid = y,
-                        Solid = isWall, //Solid
-                        WorldPos = new float2(xpos, ypos),
-                        CellSize = _cellSize,
+                        Solid = isWall,
                         Liquid = 0f,
                         Settled = false,
-                        //index = index,
-                        LeftIndex = leftIndex,
-                        RightIndex = rightIndex,
-                        BottomIndex = bottomIndex,
-                        TopIndex = topIndex,
-                        BottomLeftIndex = bottomLeftIndex,
-                        TopLeftIndex = topLeftIndex,
-                        TopRightIndex = topRightIndex,
-                        BottomRightIndex = bottomRightIndex,
+                    });
+
+                    _entityManager.SetComponentData(cell, new CellRenderComponent 
+                    {
+                        Matrix = Matrix4x4.TRS(new Vector3(xpos, ypos, 0), Quaternion.identity, new Vector3(1.0f, 1.0f, 0.0f))
                     });
 
                     //Add Cell to Array

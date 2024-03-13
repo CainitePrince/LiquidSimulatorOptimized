@@ -8,7 +8,7 @@ namespace WaterSimulation
     {
         protected override void OnUpdate()
         {
-            Vector2 gravity = CreateTileMap.GetInstance().GetGravityVector(out bool isDiagonal);
+            Vector2 gravity = WaterSimulationGrid.GetInstance().GetGravityVector(out bool isDiagonal);
             gravity.Normalize();
 
             Vector2 defaultGravity = new Vector2(0.0f, 1.0f);
@@ -18,16 +18,11 @@ namespace WaterSimulation
 
             float angle = Mathf.Atan2(det, dot);
 
-            CreateTileMap.GetInstance().WaterMaterial.SetFloat("_Ratio", isDiagonal ? 1.414f : 1.0f);
+            WaterSimulationGrid.GetInstance().WaterMaterial.SetFloat("_Ratio", isDiagonal ? 1.414f : 1.0f);
 
-            Entities.ForEach((ref CellComponent cell) =>
+            Entities.ForEach((ref CellSimulationComponent cellSimulationComponent, ref CellRenderComponent cellRenderComponent) =>
             {
-                cell.UV = new Vector4(cell.Solid ? 2.0f : cell.IsDownFlowingLiquid ? 1.0f : Mathf.Clamp01(cell.Liquid), angle, 0.0f, 0.0f);
-
-                cell.Matrix = Matrix4x4.TRS(
-                    new Vector3(cell.WorldPos.x, cell.WorldPos.y, 0),
-                    Quaternion.identity,
-                    new Vector3(cell.CellSize, cell.CellSize, 0));
+                cellRenderComponent.UV = new Vector4(cellSimulationComponent.Solid ? 2.0f : cellSimulationComponent.IsDownFlowingLiquid ? 1.0f : Mathf.Clamp01(cellSimulationComponent.Liquid), angle, 0.0f, 0.0f);
             }).Schedule();
         }
     }
