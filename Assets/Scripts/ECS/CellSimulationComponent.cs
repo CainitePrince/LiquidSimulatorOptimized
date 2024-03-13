@@ -2,6 +2,9 @@
 
 namespace WaterSimulation
 {
+    /// <summary>
+    /// Component for water simulation
+    /// </summary>
     public struct CellSimulationComponent : IComponentData
     {
         public int SettleCount;
