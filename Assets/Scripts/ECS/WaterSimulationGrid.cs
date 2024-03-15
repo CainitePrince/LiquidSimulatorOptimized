@@ -2,6 +2,9 @@
 using UnityEngine;
 using Unity.Entities;
 using Unity.Collections;
+using System.Collections.Generic;
+using System.Net.Http.Headers;
+using UnityEngine.U2D;
 
 namespace WaterSimulation
 {
@@ -66,14 +69,15 @@ namespace WaterSimulation
         public NativeArray<int> BottomRightIndices;
 
         [SerializeField] private int _liquidPerClick = 5;
-        [SerializeField] private GravityEnum _gravity = GravityEnum.Down;
+        //[SerializeField] private GravityEnum _gravity = GravityEnum.Down;
+        [SerializeField] private Vector2 _gravity = new(0, 1);
 
         private Entity[] _cells;
         private bool _fill;
         private EntityManager _entityManager;
         private EntityArchetype _cellArchetype;
         private CellSimulationComponent _clickedCell;
-        private float _cellSize = 1.0f;
+        private readonly float _cellSize = 1.0f;
 
         private static WaterSimulationGrid _instance;
 
@@ -118,6 +122,7 @@ namespace WaterSimulation
             TopLeftIndices.Dispose();
             TopRightIndices.Dispose();
             BottomRightIndices.Dispose();
+            FlowRatios.Dispose();
         }
 
         void Update()
@@ -188,6 +193,14 @@ namespace WaterSimulation
             }
         }
 
+        public Vector2 GetGravityVector()
+        {
+            Vector2 gravity = _gravity;
+            gravity.Normalize();
+            return gravity;
+        }
+
+        /*
         public Vector2 GetGravityVector(out bool isDiagonal)
         {
             switch (_gravity)
@@ -227,7 +240,8 @@ namespace WaterSimulation
                 default:
                     throw new NotImplementedException("Unimplemented gravity direction.");
             }
-        }
+        }        
+        */
 
         int ToOffset(float v)
         {
@@ -239,15 +253,246 @@ namespace WaterSimulation
             return 1 * (int)Mathf.Sign(v);
         }
 
+        /*
+        public struct IntVector
+        {
+            public IntVector(int x, int y)
+            {
+                this.x = x;
+                this.y = y;
+            }
+
+            public int x;
+            public int y;
+        }
+        */
+        //public NativeArray<NativeArray<int>> DownFlowCells;
+        //public NativeArray<NativeArray<float>> DownFlowRatios;
+        //public NativeArray<NativeArray<int>> LeftFlowCells;
+        //public NativeArray<NativeArray<float>> LeftFlowRatios;
+        //public NativeArray<NativeArray<int>> RightFlowCells;
+        //public NativeArray<NativeArray<float>> RightFlowRatios;
+
+        public NativeArray<float> FlowRatios;
+
+        private void CalculateCellFlowRatios()
+        {
+            Vector3[] directions = new Vector3[8];
+            directions[0] = new Vector3( 0, -1, 0);
+            directions[1] = new Vector3( 1, -1, 0);
+            directions[2] = new Vector3( 1,  0, 0);
+            directions[3] = new Vector3( 1,  1, 0);
+            directions[4] = new Vector3( 0,  1, 0);
+            directions[5] = new Vector3(-1,  1, 0);
+            directions[6] = new Vector3(-1,  0, 0);
+            directions[7] = new Vector3(-1, -1, 0);
+
+            Vector2 normalizedGravity2D = GetGravityVector();
+            Vector3 normalizedGravity3D = new Vector3(normalizedGravity2D.x, normalizedGravity2D.y, 0.0f);
+
+            // World space down, left, and right
+            Vector3 wsBottom = new Vector3(normalizedGravity3D.x, normalizedGravity3D.y, 0.0f);
+            Vector3 wsRight = Vector3.Cross(wsBottom, new Vector3(0.0f, 0.0f, 1.0f));
+            Vector3 wsLeft = -wsRight;
+
+            // Determine general orientation of gravity with regards to the cells
+            // We will control the flow more precisely with flow ratios
+            Vector2 gravityCellOffset = Vector2.zero; 
+            for (int i = 0; i < 8; ++i)
+            {
+                Vector3 normalizedDirection = Vector3.Normalize(directions[i]);
+                float bottomAngle = Vector3.Dot(normalizedGravity3D, normalizedDirection);
+                if (bottomAngle > 0.25f)
+                {
+                    gravityCellOffset = directions[i];
+                    break;
+                }
+            }
+
+            // Calculate cell neighbour offsets with regards to gravity 
+            Vector3 csBottom = new Vector3(gravityCellOffset.x, gravityCellOffset.y, 0.0f);
+            Vector3 csRight = Vector3.Cross(csBottom, new Vector3(0.0f, 0.0f, 1.0f));
+            Vector3 csLeft = -csRight;
+            Vector3 csBottomLeft = Vector3.Normalize(csBottom + csLeft);
+            Vector3 csTopLeft = Vector3.Normalize(-csBottom + csLeft);
+
+            int xLeft = ToOffset(csLeft.x);
+            int yLeft = ToOffset(csLeft.y);
+            int xBottom = ToOffset(csBottom.x);
+            int yBottom = ToOffset(csBottom.y);
+            int xBottomLeft = ToOffset(csBottomLeft.x);
+            int yBottomLeft = ToOffset(csBottomLeft.y);
+            int xTopLeft = ToOffset(csTopLeft.x);
+            int yTopLeft = ToOffset(csTopLeft.y);
+
+            //List<IntVector> downFlowCells = new();
+            //List<float> downFlowRatios = new();
+            //List<IntVector> leftFlowCells = new();
+            //List<float> leftFlowRatios = new();
+            //List<IntVector> rightFlowCells = new();
+            //List<float> rightFlowRatios = new();
+
+            FlowRatios = new NativeArray<float>(5, Allocator.Persistent);
+
+            // Calculate flow ratio for each of the 5 cells that water can flow to
+
+            float angle = Vector3.Dot(Vector3.Normalize(csLeft), wsLeft);
+            float ratio = (0.25f - angle) / 0.25f;
+            FlowRatios[0] = Mathf.Lerp(0.0f, 2.0f, ratio);
+            FlowRatios[4] = 2.0f - FlowRatios[0];
+
+            angle = Vector3.Dot(Vector3.Normalize(csBottom), wsBottom);
+            ratio = (0.25f - angle) / 0.25f;
+            FlowRatios[2] = Mathf.Lerp(0.33f, 0.66f, ratio);
+
+            angle = Vector3.Dot(Vector3.Normalize(csBottomLeft), wsLeft);
+            ratio = (0.25f - angle) / 0.25f;
+            FlowRatios[1] = Mathf.Lerp(0.167f, 0.33f, ratio);
+            FlowRatios[3] = FlowRatios[1] - 0.167f;
+
+            /*
+            for (int i = 0; i < 8; ++i)
+            {
+                Vector3 normalizedDirection = Vector3.Normalize(directions[i]);
+
+                float bottomAngle = Vector2.Dot(gravity, normalizedDirection);
+
+                if (bottomAngle >= 0.5f)
+                {
+                    IntVector offset = new((int)directions[i].x, (int)directions[i].y);
+                    downFlowCells.Add(offset);
+                    float ratio = (0.5f - bottomAngle) / 0.5f;//(fourtyFiveDegrees - angle) / fourtyFiveDegrees;
+                    downFlowRatios.Add(Mathf.Lerp(0.125f, 0.75f, ratio));
+                }
+
+                float leftAngle = Vector2.Dot(left, normalizedDirection);
+
+                if (leftAngle > 0.5f)
+                {
+                    if (bottomAngle > 0.0f)
+                    {
+                        IntVector offset = new((int)directions[i].x, (int)directions[i].y);
+                        leftFlowCells.Add(offset);
+                        float ratio = (0.5f - leftAngle) / 0.5f;
+                        leftFlowRatios.Add(Mathf.Lerp(0.25f, 0.75f, ratio));
+                    }
+                }
+
+                float rightAngle = Vector2.Dot(right, normalizedDirection);
+
+                if (rightAngle > 0.5f)
+                {
+                    if (bottomAngle > 0.0f)
+                    {
+                        IntVector offset = new((int)directions[i].x, (int)directions[i].y);
+                        rightFlowCells.Add(offset);
+                        float ratio = (0.5f - leftAngle) / 0.5f;
+                        rightFlowRatios.Add(Mathf.Lerp(0.25f, 0.75f, ratio));
+                    }
+                }
+            }
+            */
+
+
+        }
+        /*
+        private float AngleBetweenVectors(ref Vector3 a, ref Vector3 b)
+        {
+            float dot = Vector2.Dot(a, b);
+            float det = a.x * b.y - a.y * b.x;
+
+            float angle = Mathf.Atan2(det, dot);
+
+            if (angle < 0.0f) angle += Mathf.PI * 2.0f;
+            
+            return angle;
+        }
+        */
         private void CreateGrid()
         {
+            //CalculateCellFlowRatios();
+
+            Vector3[] directions = new Vector3[8];
+            directions[0] = new Vector3(0, -1, 0);
+            directions[1] = new Vector3(1, -1, 0);
+            directions[2] = new Vector3(1, 0, 0);
+            directions[3] = new Vector3(1, 1, 0);
+            directions[4] = new Vector3(0, 1, 0);
+            directions[5] = new Vector3(-1, 1, 0);
+            directions[6] = new Vector3(-1, 0, 0);
+            directions[7] = new Vector3(-1, -1, 0);
+
+            Vector2 normalizedGravity2D = GetGravityVector();
+            Vector3 normalizedGravity3D = new Vector3(normalizedGravity2D.x, normalizedGravity2D.y, 0.0f);
+
+            // World space down, left, and right
+            Vector3 wsBottom = new Vector3(normalizedGravity3D.x, normalizedGravity3D.y, 0.0f);
+            Vector3 wsRight = Vector3.Cross(wsBottom, new Vector3(0.0f, 0.0f, 1.0f));
+            Vector3 wsLeft = -wsRight;
+
+            // Determine general orientation of gravity with regards to the cells
+            // We will control the flow more precisely with flow ratios
+            Vector2 gravityCellOffset = Vector2.zero;
+            for (int i = 0; i < 8; ++i)
+            {
+                Vector3 normalizedDirection = Vector3.Normalize(directions[i]);
+                float bottomAngle = Vector3.Dot(normalizedGravity3D, normalizedDirection);
+                if (bottomAngle >= 0.75f)
+                {
+                    gravityCellOffset = directions[i];
+                    break;
+                }
+            }
+
+            // Calculate cell neighbour offsets with regards to gravity 
+            Vector3 csBottom = new Vector3(gravityCellOffset.x, gravityCellOffset.y, 0.0f);
+            Vector3 csRight = Vector3.Cross(csBottom, new Vector3(0.0f, 0.0f, 1.0f));
+            Vector3 csLeft = -csRight;
+            Vector3 csBottomLeft = Vector3.Normalize(csBottom + csLeft);
+            Vector3 csTopLeft = Vector3.Normalize(-csBottom + csLeft);
+
+            int xLeft = ToOffset(csLeft.x);
+            int yLeft = ToOffset(csLeft.y);
+            int xBottom = ToOffset(csBottom.x);
+            int yBottom = ToOffset(csBottom.y);
+            int xBottomLeft = ToOffset(csBottomLeft.x);
+            int yBottomLeft = ToOffset(csBottomLeft.y);
+            int xTopLeft = ToOffset(csTopLeft.x);
+            int yTopLeft = ToOffset(csTopLeft.y);
+
+            //List<IntVector> downFlowCells = new();
+            //List<float> downFlowRatios = new();
+            //List<IntVector> leftFlowCells = new();
+            //List<float> leftFlowRatios = new();
+            //List<IntVector> rightFlowCells = new();
+            //List<float> rightFlowRatios = new();
+
+            FlowRatios = new NativeArray<float>(5, Allocator.Persistent);
+
+            // Calculate flow ratio for each of the 5 cells that water can flow to
+
+            float angle = Vector3.Dot(Vector3.Normalize(csLeft), wsLeft);
+            float ratio = (1.0f - angle) / 0.25f;
+            FlowRatios[0] = Mathf.Lerp(0.0f, 2.0f, ratio);
+            FlowRatios[4] = 2.0f - FlowRatios[0];
+
+            angle = Vector3.Dot(Vector3.Normalize(csBottom), wsBottom);
+            ratio = (0.25f - angle) / 0.25f;
+            FlowRatios[2] = Mathf.Lerp(0.33f, 0.66f, ratio);
+
+            angle = Vector3.Dot(Vector3.Normalize(csBottomLeft), wsLeft);
+            ratio = (0.25f - angle) / 0.25f;
+            FlowRatios[1] = Mathf.Lerp(0.167f, 0.33f, ratio);
+            FlowRatios[3] = FlowRatios[1] - 0.167f;
+
+            /*
             Vector2 gravity = GetGravityVector(out var _);
 
             Vector3 bottom = Vector3.Normalize(new Vector3(gravity.x, gravity.y, 0.0f));
             Vector3 left = -Vector3.Cross(bottom, new Vector3(0.0f, 0.0f, 1.0f));
             Vector3 bottomLeft = Vector3.Normalize(bottom + left);
             Vector3 topLeft = Vector3.Normalize(-bottom + left);
-
+            
             int xLeft = ToOffset(left.x);
             int yLeft = ToOffset(left.y);
             int xBottom = ToOffset(bottom.x);
@@ -256,7 +501,7 @@ namespace WaterSimulation
             int yBottomLeft = ToOffset(bottomLeft.y);
             int xTopLeft = ToOffset(topLeft.x);
             int yTopLeft = ToOffset(topLeft.y);
-
+            */
             int cellCount = GridWidth * GridHeight;
 
             TopIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
@@ -308,6 +553,15 @@ namespace WaterSimulation
                     TopLeftIndices[index] = CalculateCellIndex(x + xTopLeft, y + yTopLeft);
                     TopRightIndices[index] = CalculateCellIndex(x - xBottomLeft, y - yBottomLeft);
                     BottomRightIndices[index] = CalculateCellIndex(x - xTopLeft, y - yTopLeft);
+
+                    //TopIndices[index] = CalculateCellIndex(x, y-1);
+                    //LeftIndices[index] = CalculateCellIndex(x-1, y);
+                    //RightIndices[index] = CalculateCellIndex(x+1, y);
+                    //BottomIndices[index] = CalculateCellIndex(x, y+1);
+                    //BottomLeftIndices[index] = CalculateCellIndex(x-1, y+1);
+                    //TopLeftIndices[index] = CalculateCellIndex(x-1, y-1);
+                    //TopRightIndices[index] = CalculateCellIndex(x+1, y-1);
+                    //BottomRightIndices[index] = CalculateCellIndex(x+1, y+1);
 
                     _entityManager.SetComponentData(cell, new CellSimulationComponent
                     {

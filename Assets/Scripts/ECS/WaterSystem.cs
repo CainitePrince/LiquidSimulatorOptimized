@@ -62,7 +62,8 @@ namespace WaterSimulation
                 BottomLeftIndices = tiles.BottomLeftIndices,
                 TopLeftIndices = tiles.TopLeftIndices,
                 TopRightIndices = tiles.TopRightIndices,
-                BottomRightIndices = tiles.BottomRightIndices
+                BottomRightIndices = tiles.BottomRightIndices,
+                FlowRatios = tiles.FlowRatios
             }.Schedule(current.Length, 32);
 
             //Complete Physics Job
@@ -80,8 +81,10 @@ namespace WaterSimulation
                 LeftIndices = tiles.LeftIndices,
                 RightIndices = tiles.RightIndices,
                 BottomIndices = tiles.BottomIndices,
+                //BottomLeftIndices = tiles.BottomLeftIndices,
                 TopLeftIndices = tiles.TopLeftIndices,
                 TopRightIndices = tiles.TopRightIndices,
+                //BottomRightIndices = tiles.BottomRightIndices
             }.Schedule(current.Length, 32);
 
             applyWaterPhysicsHandle.Complete();
@@ -113,6 +116,7 @@ namespace WaterSimulation
             [ReadOnly] public NativeArray<int> TopLeftIndices;
             [ReadOnly] public NativeArray<int> TopRightIndices;
             [ReadOnly] public NativeArray<int> BottomRightIndices;
+            [ReadOnly] public NativeArray<float> FlowRatios;
 
             public float MaxLiquid;
             public float MinLiquid;
@@ -168,6 +172,9 @@ namespace WaterSimulation
                 {
                     // Determine rate of flow
                     flow = CalculateVerticalFlowValue(remainingLiquid, current[bottomIndex].Liquid) - current[bottomIndex].Liquid;
+
+                    flow *= FlowRatios[2];
+
                     if (current[bottomIndex].Liquid > 0 && flow > MinFlow)
                         flow *= FlowSpeed;
 
@@ -216,7 +223,7 @@ namespace WaterSimulation
                     // Determine rate of flow
                     flow = CalculateVerticalFlowValue(remainingLiquid, current[bottomLeftIndex].Liquid) - current[bottomLeftIndex].Liquid;
 
-                    flow *= 0.5f;
+                    flow *= FlowRatios[1];
 
                     if (current[bottomLeftIndex].Liquid > 0 && flow > MinFlow)
                         flow *= FlowSpeed;
@@ -265,7 +272,7 @@ namespace WaterSimulation
                     // Determine rate of flow
                     flow = CalculateVerticalFlowValue(remainingLiquid, current[bottomRightIndex].Liquid) - current[bottomRightIndex].Liquid;
 
-                    flow *= 0.5f;
+                    flow *= FlowRatios[3];
 
                     if (current[bottomRightIndex].Liquid > 0 && flow > MinFlow)
                         flow *= FlowSpeed;
@@ -312,6 +319,9 @@ namespace WaterSimulation
                 {
                     // Calculate flow rate
                     flow = (remainingLiquid - current[leftIndex].Liquid) / 4f;
+
+                    flow *= FlowRatios[0];
+
                     if (flow > MinFlow)
                         flow *= FlowSpeed;
 
@@ -357,7 +367,10 @@ namespace WaterSimulation
                 if (current[rightIndex].Solid == false)
                 {
                     // calc flow rate
-                    flow = (remainingLiquid - current[rightIndex].Liquid) / 3f;
+                    flow = (remainingLiquid - current[rightIndex].Liquid) / 4f;/// 3f;
+
+                    flow *= FlowRatios[4];
+
                     if (flow > MinFlow)
                         flow *= FlowSpeed;
 
@@ -453,6 +466,8 @@ namespace WaterSimulation
             [ReadOnly] public NativeArray<int> BottomIndices;
             [ReadOnly] public NativeArray<int> TopLeftIndices;
             [ReadOnly] public NativeArray<int> TopRightIndices;
+            //[ReadOnly] public NativeArray<int> BottomLeftIndices;
+            //[ReadOnly] public NativeArray<int> BottomRightIndices;
 
             public void Execute(int index)
             {
@@ -468,6 +483,8 @@ namespace WaterSimulation
                 int rightIndex = RightIndices[index];
                 int topLeftIndex = TopLeftIndices[index];
                 int topRightIndex = TopRightIndices[index];
+                //int bottomLeftIndex = BottomLeftIndices[index];
+                //int bottomRightIndex = BottomRightIndices[index];
 
                 //Total Cell modifications
                 modifiedLiquid += current[index].ModifySelf;
@@ -477,6 +494,8 @@ namespace WaterSimulation
                 modifiedLiquid += current[rightIndex].ModifyLeft;
                 modifiedLiquid += current[topLeftIndex].ModifyBottomRight;
                 modifiedLiquid += current[topRightIndex].ModifyBottomLeft;
+                //modifiedLiquid += current[bottomLeftIndex].ModifyTopRight;
+                //modifiedLiquid += current[bottomRightIndex].ModifyTopLeft;
 
                 // Check if cell is settled (avoid settling empty cells)
                 if (modifiedLiquid == current[index].Liquid && current[index].Liquid != 0)
