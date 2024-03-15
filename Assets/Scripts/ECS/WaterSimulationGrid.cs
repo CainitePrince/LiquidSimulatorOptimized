@@ -9,7 +9,7 @@ namespace WaterSimulation
      * This code is based on https://github.com/BroMayo/unity-dots-ca-watersim 
      * which in turn is based on https://github.com/jongallant/LiquidSimulator
      * 
-     * I have modified the code to add arbitrary gravity, implementing 8-connectivity to make diagonal gravity work.
+     * I have added arbitrary gravity, implementing 8-connectivity to make diagonal gravity work.
      * This alters the behaviour of the simulation a bit, water will go through diagonal gaps in walls and will also flow diagonally.
      * I removed water flowing up through pressure. The rendering was also changed to support rotation of water.
      * 
