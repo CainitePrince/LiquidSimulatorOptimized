@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace WaterSimulation
 {
+    /// <summary>
+    /// Updates the UV information. This is used by the shader to draw the cell.
+    /// </summary>
     public partial class PrepareCellsForRendering : SystemBase
     {
         protected override void OnUpdate()

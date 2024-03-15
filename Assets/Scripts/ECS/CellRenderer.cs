@@ -6,6 +6,9 @@ using Unity.Mathematics;
 
 namespace WaterSimulation
 {
+    /// <summary>
+    /// Unity DOTS system for rendering the cells.  
+    /// </summary>
     [UpdateAfter(typeof(PrepareCellsForRendering))]
     public partial class CellRenderer : SystemBase
     {
