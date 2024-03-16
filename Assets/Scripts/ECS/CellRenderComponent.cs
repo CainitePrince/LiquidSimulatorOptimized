@@ -8,7 +8,7 @@ namespace WaterSimulation
     /// </summary>
     public struct CellRenderComponent : IComponentData
     {
-        public Matrix4x4 Matrix;
-        public Vector4 UV;
+        public Vector4 UV; 
+        public Vector2 WorldPosition;
     }
 }

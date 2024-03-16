@@ -64,7 +64,8 @@ namespace WaterSimulation
                     for (int j = 0; j < sliceSize; j++)
                     {
                         CellRenderComponent cellComponentData = cellSpriteDataArray[i + j];
-                        _matrices[slice].Add(cellComponentData.Matrix);
+                        var matrix = Matrix4x4.TRS(new Vector3(cellComponentData.WorldPosition.x, cellComponentData.WorldPosition.y, 0), Quaternion.identity, new Vector3(1.0f, 1.0f, 0.0f));
+                        _matrices[slice].Add(matrix);
                     }
 
                     slice++;

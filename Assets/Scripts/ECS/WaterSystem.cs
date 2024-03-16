@@ -453,12 +453,10 @@ namespace WaterSimulation
         [BurstCompile]
         private struct ApplyWaterPhysics : IJobParallelFor
         { 
-            //Apply modify values from calculatewaterphysics job
-
             [ReadOnly]
-            public NativeArray<CellSimulationComponent> current; //Pre Mods
+            public NativeArray<CellSimulationComponent> current;
             [WriteOnly]
-            public NativeArray<CellSimulationComponent> next; //Applied Mods
+            public NativeArray<CellSimulationComponent> next;
 
             [ReadOnly] public NativeArray<int> TopIndices;
             [ReadOnly] public NativeArray<int> LeftIndices;
@@ -466,8 +464,6 @@ namespace WaterSimulation
             [ReadOnly] public NativeArray<int> BottomIndices;
             [ReadOnly] public NativeArray<int> TopLeftIndices;
             [ReadOnly] public NativeArray<int> TopRightIndices;
-            //[ReadOnly] public NativeArray<int> BottomLeftIndices;
-            //[ReadOnly] public NativeArray<int> BottomRightIndices;
 
             public void Execute(int index)
             {
@@ -483,8 +479,6 @@ namespace WaterSimulation
                 int rightIndex = RightIndices[index];
                 int topLeftIndex = TopLeftIndices[index];
                 int topRightIndex = TopRightIndices[index];
-                //int bottomLeftIndex = BottomLeftIndices[index];
-                //int bottomRightIndex = BottomRightIndices[index];
 
                 //Total Cell modifications
                 modifiedLiquid += current[index].ModifySelf;
@@ -494,8 +488,6 @@ namespace WaterSimulation
                 modifiedLiquid += current[rightIndex].ModifyLeft;
                 modifiedLiquid += current[topLeftIndex].ModifyBottomRight;
                 modifiedLiquid += current[topRightIndex].ModifyBottomLeft;
-                //modifiedLiquid += current[bottomLeftIndex].ModifyTopRight;
-                //modifiedLiquid += current[bottomRightIndex].ModifyTopLeft;
 
                 // Check if cell is settled (avoid settling empty cells)
                 if (modifiedLiquid == current[index].Liquid && current[index].Liquid != 0)

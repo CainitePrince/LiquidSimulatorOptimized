@@ -11,7 +11,7 @@ namespace WaterSimulation
     {
         protected override void OnUpdate()
         {
-            Vector2 gravity = WaterSimulationGrid.GetInstance().GetGravityVector(/*out bool isDiagonal*/);
+            Vector2 gravity = WaterSimulationGrid.GetInstance().GetGravityVector();
 
             Vector2 defaultGravity = new(0.0f, 1.0f);
 

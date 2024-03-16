@@ -16,8 +16,6 @@ namespace WaterSimulation
         public float ModifyRight;
         public float ModifyBottomLeft;
         public float ModifyBottomRight;
-        //public float ModifyTopRight;
-        //public float ModifyTopLeft;
         public bool Solid;
         public bool Settled;
         public bool IsDownFlowingLiquid;
