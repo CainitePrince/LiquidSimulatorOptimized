@@ -24,7 +24,7 @@ namespace WaterSimulation
      * 
      * For a grid that is 80x40 the simulation is currently gpu bound, rather than the simulation being the bottleneck.
      * The original DOTS code (first link) was running with a 150x150 grid at roughly 16 ms per frame.
-     * The current code can run with a 400x400 grid at roughly 16 ms per frame.
+     * The current code can run with a 450x450 grid at roughly 16 ms per frame.
      * 
      * The simulation can probably be made faster by implementing it with compute shaders.
      */
@@ -194,6 +194,12 @@ namespace WaterSimulation
         public Vector2 GetGravityVector()
         {
             Vector2 gravity = _gravity;
+
+            if (gravity.magnitude < 0.001f)
+            {
+                return new Vector2(0.0f, 1.0f);
+            }
+
             gravity.Normalize();
             return gravity;
         }
@@ -300,7 +306,7 @@ namespace WaterSimulation
             _cells = new Entity[GridWidth * GridHeight];
 
             //Make this object transform center of map
-            UnityEngine.Vector3 offset = new UnityEngine.Vector3(
+            Vector3 offset = new (
                 this.transform.position.x - (((((float)GridWidth * _cellSize)) / 2) - (_cellSize / 2)),
                 this.transform.position.y + (((((float)GridHeight * _cellSize)) / 2) + (_cellSize / 2)), 0);
 
