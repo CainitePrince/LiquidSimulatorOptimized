@@ -15,8 +15,8 @@ namespace WaterSimulation
         private EntityQuery _entityQuery;
         private int _valuesShaderProperty;
         private MaterialPropertyBlock _materialPropertyBlock;
-        private readonly List<List<Matrix4x4>> _matrices = new List<List<Matrix4x4>>();
-        private readonly List<List<Vector4>> _uvs = new List<List<Vector4>>();
+        private readonly List<List<Matrix4x4>> _matrices = new();
+        private readonly List<List<Vector4>> _uvs = new();
         private bool _allocated = false;
         private bool _createdMatrixData = false;
 
@@ -64,7 +64,8 @@ namespace WaterSimulation
                     for (int j = 0; j < sliceSize; j++)
                     {
                         CellRenderComponent cellComponentData = cellSpriteDataArray[i + j];
-                        _matrices[slice].Add(cellComponentData.Matrix);
+                        var matrix = Matrix4x4.TRS(new Vector3(cellComponentData.WorldPosition.x, cellComponentData.WorldPosition.y, 0), Quaternion.identity, new Vector3(1.0f, 1.0f, 0.0f));
+                        _matrices[slice].Add(matrix);
                     }
 
                     slice++;

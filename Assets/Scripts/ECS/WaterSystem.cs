@@ -62,7 +62,8 @@ namespace WaterSimulation
                 BottomLeftIndices = tiles.BottomLeftIndices,
                 TopLeftIndices = tiles.TopLeftIndices,
                 TopRightIndices = tiles.TopRightIndices,
-                BottomRightIndices = tiles.BottomRightIndices
+                BottomRightIndices = tiles.BottomRightIndices,
+                FlowRatios = tiles.FlowRatios
             }.Schedule(current.Length, 32);
 
             //Complete Physics Job
@@ -80,8 +81,10 @@ namespace WaterSimulation
                 LeftIndices = tiles.LeftIndices,
                 RightIndices = tiles.RightIndices,
                 BottomIndices = tiles.BottomIndices,
+                //BottomLeftIndices = tiles.BottomLeftIndices,
                 TopLeftIndices = tiles.TopLeftIndices,
                 TopRightIndices = tiles.TopRightIndices,
+                //BottomRightIndices = tiles.BottomRightIndices
             }.Schedule(current.Length, 32);
 
             applyWaterPhysicsHandle.Complete();
@@ -113,6 +116,7 @@ namespace WaterSimulation
             [ReadOnly] public NativeArray<int> TopLeftIndices;
             [ReadOnly] public NativeArray<int> TopRightIndices;
             [ReadOnly] public NativeArray<int> BottomRightIndices;
+            [ReadOnly] public NativeArray<float> FlowRatios;
 
             public float MaxLiquid;
             public float MinLiquid;
@@ -168,6 +172,9 @@ namespace WaterSimulation
                 {
                     // Determine rate of flow
                     flow = CalculateVerticalFlowValue(remainingLiquid, current[bottomIndex].Liquid) - current[bottomIndex].Liquid;
+
+                    flow *= FlowRatios[2];
+
                     if (current[bottomIndex].Liquid > 0 && flow > MinFlow)
                         flow *= FlowSpeed;
 
@@ -216,7 +223,7 @@ namespace WaterSimulation
                     // Determine rate of flow
                     flow = CalculateVerticalFlowValue(remainingLiquid, current[bottomLeftIndex].Liquid) - current[bottomLeftIndex].Liquid;
 
-                    flow *= 0.5f;
+                    flow *= FlowRatios[1];
 
                     if (current[bottomLeftIndex].Liquid > 0 && flow > MinFlow)
                         flow *= FlowSpeed;
@@ -265,7 +272,7 @@ namespace WaterSimulation
                     // Determine rate of flow
                     flow = CalculateVerticalFlowValue(remainingLiquid, current[bottomRightIndex].Liquid) - current[bottomRightIndex].Liquid;
 
-                    flow *= 0.5f;
+                    flow *= FlowRatios[3];
 
                     if (current[bottomRightIndex].Liquid > 0 && flow > MinFlow)
                         flow *= FlowSpeed;
@@ -312,6 +319,9 @@ namespace WaterSimulation
                 {
                     // Calculate flow rate
                     flow = (remainingLiquid - current[leftIndex].Liquid) / 4f;
+
+                    flow *= FlowRatios[0];
+
                     if (flow > MinFlow)
                         flow *= FlowSpeed;
 
@@ -358,6 +368,9 @@ namespace WaterSimulation
                 {
                     // calc flow rate
                     flow = (remainingLiquid - current[rightIndex].Liquid) / 3f;
+
+                    flow *= FlowRatios[4];
+
                     if (flow > MinFlow)
                         flow *= FlowSpeed;
 
@@ -440,12 +453,10 @@ namespace WaterSimulation
         [BurstCompile]
         private struct ApplyWaterPhysics : IJobParallelFor
         { 
-            //Apply modify values from calculatewaterphysics job
-
             [ReadOnly]
-            public NativeArray<CellSimulationComponent> current; //Pre Mods
+            public NativeArray<CellSimulationComponent> current;
             [WriteOnly]
-            public NativeArray<CellSimulationComponent> next; //Applied Mods
+            public NativeArray<CellSimulationComponent> next;
 
             [ReadOnly] public NativeArray<int> TopIndices;
             [ReadOnly] public NativeArray<int> LeftIndices;

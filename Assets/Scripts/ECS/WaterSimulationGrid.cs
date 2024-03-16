@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using Unity.Entities;
 using Unity.Collections;
 
@@ -25,7 +24,7 @@ namespace WaterSimulation
      * 
      * For a grid that is 80x40 the simulation is currently gpu bound, rather than the simulation being the bottleneck.
      * The original DOTS code (first link) was running with a 150x150 grid at roughly 16 ms per frame.
-     * The current code can run with a 400x400 grid at roughly 16 ms per frame.
+     * The current code can run with a 450x450 grid at roughly 16 ms per frame.
      * 
      * The simulation can probably be made faster by implementing it with compute shaders.
      */
@@ -65,15 +64,18 @@ namespace WaterSimulation
         public NativeArray<int> TopRightIndices;
         public NativeArray<int> BottomRightIndices;
 
+        // Look up table for flow ratios
+        public NativeArray<float> FlowRatios;
+
         [SerializeField] private int _liquidPerClick = 5;
-        [SerializeField] private GravityEnum _gravity = GravityEnum.Down;
+        [SerializeField] private Vector2 _gravity = new(0, 1);
 
         private Entity[] _cells;
         private bool _fill;
         private EntityManager _entityManager;
         private EntityArchetype _cellArchetype;
         private CellSimulationComponent _clickedCell;
-        private float _cellSize = 1.0f;
+        private readonly float _cellSize = 1.0f;
 
         private static WaterSimulationGrid _instance;
 
@@ -118,6 +120,7 @@ namespace WaterSimulation
             TopLeftIndices.Dispose();
             TopRightIndices.Dispose();
             BottomRightIndices.Dispose();
+            FlowRatios.Dispose();
         }
 
         void Update()
@@ -188,45 +191,17 @@ namespace WaterSimulation
             }
         }
 
-        public Vector2 GetGravityVector(out bool isDiagonal)
+        public Vector2 GetGravityVector()
         {
-            switch (_gravity)
+            Vector2 gravity = _gravity;
+
+            if (gravity.magnitude < 0.001f)
             {
-                case GravityEnum.Down:
-                    isDiagonal = false;
-                    return new Vector2(0.0f, 1.0f);
-
-                case GravityEnum.Left:
-                    isDiagonal = false;
-                    return new Vector2(-1.0f, 0.0f);
-
-                case GravityEnum.Right:
-                    isDiagonal = false;
-                    return new Vector2(1.0f, 0.0f);
-
-                case GravityEnum.Up:
-                    isDiagonal = false;
-                    return new Vector2(0.0f, -1.0f);
-
-                case GravityEnum.DownLeft:
-                    isDiagonal = true;
-                    return new Vector2(-1.0f, 1.0f);
-
-                case GravityEnum.UpLeft:
-                    isDiagonal = true;
-                    return new Vector2(-1.0f, -1.0f);
-
-                case GravityEnum.UpRight:
-                    isDiagonal = true;
-                    return new Vector2(1.0f, -1.0f);
-
-                case GravityEnum.DownRight:
-                    isDiagonal = true;
-                    return new Vector2(1.0f, 1.0f);
-
-                default:
-                    throw new NotImplementedException("Unimplemented gravity direction.");
+                return new Vector2(0.0f, 1.0f);
             }
+
+            gravity.Normalize();
+            return gravity;
         }
 
         int ToOffset(float v)
@@ -239,23 +214,83 @@ namespace WaterSimulation
             return 1 * (int)Mathf.Sign(v);
         }
 
+
         private void CreateGrid()
         {
-            Vector2 gravity = GetGravityVector(out var _);
+            Vector3[] directions = new Vector3[8];
+            directions[0] = new Vector3(0, -1, 0);
+            directions[1] = new Vector3(1, -1, 0);
+            directions[2] = new Vector3(1, 0, 0);
+            directions[3] = new Vector3(1, 1, 0);
+            directions[4] = new Vector3(0, 1, 0);
+            directions[5] = new Vector3(-1, 1, 0);
+            directions[6] = new Vector3(-1, 0, 0);
+            directions[7] = new Vector3(-1, -1, 0);
 
-            Vector3 bottom = Vector3.Normalize(new Vector3(gravity.x, gravity.y, 0.0f));
-            Vector3 left = -Vector3.Cross(bottom, new Vector3(0.0f, 0.0f, 1.0f));
-            Vector3 bottomLeft = Vector3.Normalize(bottom + left);
-            Vector3 topLeft = Vector3.Normalize(-bottom + left);
+            Vector2 normalizedGravity2D = GetGravityVector();
+            Vector3 normalizedGravity3D = new(normalizedGravity2D.x, normalizedGravity2D.y, 0.0f);
 
-            int xLeft = ToOffset(left.x);
-            int yLeft = ToOffset(left.y);
-            int xBottom = ToOffset(bottom.x);
-            int yBottom = ToOffset(bottom.y);
-            int xBottomLeft = ToOffset(bottomLeft.x);
-            int yBottomLeft = ToOffset(bottomLeft.y);
-            int xTopLeft = ToOffset(topLeft.x);
-            int yTopLeft = ToOffset(topLeft.y);
+            // World space down, left, and right
+            Vector3 wsBottom = new(normalizedGravity3D.x, normalizedGravity3D.y, 0.0f);
+            Vector3 wsRight = Vector3.Cross(wsBottom, new Vector3(0.0f, 0.0f, 1.0f));
+            Vector3 wsLeft = -wsRight;
+
+            // Determine general orientation of gravity with regards to the cells
+            // We will control the flow more precisely with flow ratios
+            float maxAngle = -1.0f;
+            int indexWithMaxAngle = 0;
+            for (int i = 0; i < 8; ++i)
+            {
+                Vector3 normalizedDirection = Vector3.Normalize(directions[i]);
+                float bottomAngle = Vector3.Dot(normalizedGravity3D, normalizedDirection);
+                
+                if (bottomAngle > maxAngle)
+                {
+                    maxAngle = bottomAngle;
+                    indexWithMaxAngle = i;
+                }
+            }
+            Vector2 gravityCellOffset = directions[indexWithMaxAngle];
+
+            // Calculate cell neighbour offsets with regards to gravity 
+            Vector3 csBottom = new (gravityCellOffset.x, gravityCellOffset.y, 0.0f);
+            Vector3 csRight = Vector3.Cross(csBottom, new Vector3(0.0f, 0.0f, 1.0f));
+            Vector3 csLeft = -csRight;
+            Vector3 csBottomLeft = Vector3.Normalize(csBottom + csLeft);
+            Vector3 csTopLeft = Vector3.Normalize(-csBottom + csLeft);
+
+            int xLeft = ToOffset(csLeft.x);
+            int yLeft = ToOffset(csLeft.y);
+            int xBottom = ToOffset(csBottom.x);
+            int yBottom = ToOffset(csBottom.y);
+            int xBottomLeft = ToOffset(csBottomLeft.x);
+            int yBottomLeft = ToOffset(csBottomLeft.y);
+            int xTopLeft = ToOffset(csTopLeft.x);
+            int yTopLeft = ToOffset(csTopLeft.y);
+
+            FlowRatios = new NativeArray<float>(5, Allocator.Persistent);
+
+            // Calculate flow ratio for each of the 5 cells that water can flow to
+
+            // When angle is negative flow more to the left, when angle is positive flow more to the right
+            float angle = Vector3.Dot(Vector3.Normalize(csBottom), wsLeft);
+            
+            // 0 is left, 1 is right, 0.5 is center
+            float ratio = Mathf.Clamp01((angle + 0.25f) * 2.0f); 
+            
+            // Left cell flow ratio
+            FlowRatios[0] = Mathf.Lerp(1.5f, 0.5f, ratio);
+            
+            // Right cell flow ratio
+            FlowRatios[4] = Mathf.Lerp(0.5f, 1.5f, ratio);
+
+            FlowRatios[1] = Mathf.Lerp(0.33f, 0.167f, ratio);
+            FlowRatios[3] = Mathf.Lerp(0.167f, 0.33f, ratio);
+
+            // Bottom cell flow ratio
+            angle = Vector3.Dot(Vector3.Normalize(csBottom), wsBottom);
+            ratio = (angle - 0.75f) * 4.0f;
+            FlowRatios[2] = Mathf.Lerp(0.33f, 0.66f, ratio);
 
             int cellCount = GridWidth * GridHeight;
 
@@ -268,11 +303,10 @@ namespace WaterSimulation
             TopRightIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
             BottomRightIndices = new NativeArray<int>(cellCount, Allocator.Persistent);
 
-            //Create Entity TileMap
             _cells = new Entity[GridWidth * GridHeight];
 
             //Make this object transform center of map
-            UnityEngine.Vector3 offset = new UnityEngine.Vector3(
+            Vector3 offset = new (
                 this.transform.position.x - (((((float)GridWidth * _cellSize)) / 2) - (_cellSize / 2)),
                 this.transform.position.y + (((((float)GridHeight * _cellSize)) / 2) + (_cellSize / 2)), 0);
 
@@ -316,9 +350,9 @@ namespace WaterSimulation
                         Settled = false,
                     });
 
-                    _entityManager.SetComponentData(cell, new CellRenderComponent 
+                    _entityManager.SetComponentData(cell, new CellRenderComponent
                     {
-                        Matrix = Matrix4x4.TRS(new Vector3(xpos, ypos, 0), Quaternion.identity, new Vector3(1.0f, 1.0f, 0.0f))
+                        WorldPosition = new(xpos, ypos)
                     });
 
                     _cells[index] = cell;
