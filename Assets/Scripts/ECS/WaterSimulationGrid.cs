@@ -432,17 +432,26 @@ namespace WaterSimulation
 
             // Determine general orientation of gravity with regards to the cells
             // We will control the flow more precisely with flow ratios
-            Vector2 gravityCellOffset = Vector2.zero;
+            //Vector2 gravityCellOffset = Vector2.zero;
+            float maxAngle = -1.0f;
+            int indexWithMaxAngle = 0;
             for (int i = 0; i < 8; ++i)
             {
                 Vector3 normalizedDirection = Vector3.Normalize(directions[i]);
                 float bottomAngle = Vector3.Dot(normalizedGravity3D, normalizedDirection);
-                if (bottomAngle >= 0.75f)
+                
+                if (bottomAngle > maxAngle)
                 {
-                    gravityCellOffset = directions[i];
-                    break;
+                    maxAngle = bottomAngle;
+                    indexWithMaxAngle = i;
                 }
+                //if (bottomAngle >= 0.75f)
+                //{
+                //    gravityCellOffset = directions[i];
+                //    break;
+                //}
             }
+            Vector2 gravityCellOffset = directions[indexWithMaxAngle];
 
             // Calculate cell neighbour offsets with regards to gravity 
             Vector3 csBottom = new (gravityCellOffset.x, gravityCellOffset.y, 0.0f);
