@@ -367,7 +367,7 @@ namespace WaterSimulation
                 if (current[rightIndex].Solid == false)
                 {
                     // calc flow rate
-                    flow = (remainingLiquid - current[rightIndex].Liquid) / 4f;/// 3f;
+                    flow = (remainingLiquid - current[rightIndex].Liquid) / 3f;
 
                     flow *= FlowRatios[4];
 

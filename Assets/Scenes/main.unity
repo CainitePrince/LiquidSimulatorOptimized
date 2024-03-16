@@ -216,12 +216,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5db8f7b10b0cb4b47ae01f035708d7a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GridWidth: 300
-  GridHeight: 300
+  GridWidth: 100
+  GridHeight: 100
   QuadMesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
   WaterMaterial: {fileID: 2100000, guid: dbed33f450077dd4ebe77b0f0a62536c, type: 2}
   _liquidPerClick: 5
-  _gravity: 0
+  _gravity: {x: -2, y: 1}
 --- !u!4 &1379555689
 Transform:
   m_ObjectHideFlags: 0

@@ -288,7 +288,7 @@ namespace WaterSimulation
             directions[7] = new Vector3(-1, -1, 0);
 
             Vector2 normalizedGravity2D = GetGravityVector();
-            Vector3 normalizedGravity3D = new Vector3(normalizedGravity2D.x, normalizedGravity2D.y, 0.0f);
+            Vector3 normalizedGravity3D = new(normalizedGravity2D.x, normalizedGravity2D.y, 0.0f);
 
             // World space down, left, and right
             Vector3 wsBottom = new Vector3(normalizedGravity3D.x, normalizedGravity3D.y, 0.0f);
@@ -310,7 +310,7 @@ namespace WaterSimulation
             }
 
             // Calculate cell neighbour offsets with regards to gravity 
-            Vector3 csBottom = new Vector3(gravityCellOffset.x, gravityCellOffset.y, 0.0f);
+            Vector3 csBottom = new(gravityCellOffset.x, gravityCellOffset.y, 0.0f);
             Vector3 csRight = Vector3.Cross(csBottom, new Vector3(0.0f, 0.0f, 1.0f));
             Vector3 csLeft = -csRight;
             Vector3 csBottomLeft = Vector3.Normalize(csBottom + csLeft);
@@ -423,10 +423,10 @@ namespace WaterSimulation
             directions[7] = new Vector3(-1, -1, 0);
 
             Vector2 normalizedGravity2D = GetGravityVector();
-            Vector3 normalizedGravity3D = new Vector3(normalizedGravity2D.x, normalizedGravity2D.y, 0.0f);
+            Vector3 normalizedGravity3D = new(normalizedGravity2D.x, normalizedGravity2D.y, 0.0f);
 
             // World space down, left, and right
-            Vector3 wsBottom = new Vector3(normalizedGravity3D.x, normalizedGravity3D.y, 0.0f);
+            Vector3 wsBottom = new(normalizedGravity3D.x, normalizedGravity3D.y, 0.0f);
             Vector3 wsRight = Vector3.Cross(wsBottom, new Vector3(0.0f, 0.0f, 1.0f));
             Vector3 wsLeft = -wsRight;
 
@@ -445,7 +445,7 @@ namespace WaterSimulation
             }
 
             // Calculate cell neighbour offsets with regards to gravity 
-            Vector3 csBottom = new Vector3(gravityCellOffset.x, gravityCellOffset.y, 0.0f);
+            Vector3 csBottom = new (gravityCellOffset.x, gravityCellOffset.y, 0.0f);
             Vector3 csRight = Vector3.Cross(csBottom, new Vector3(0.0f, 0.0f, 1.0f));
             Vector3 csLeft = -csRight;
             Vector3 csBottomLeft = Vector3.Normalize(csBottom + csLeft);
@@ -471,19 +471,28 @@ namespace WaterSimulation
 
             // Calculate flow ratio for each of the 5 cells that water can flow to
 
-            float angle = Vector3.Dot(Vector3.Normalize(csLeft), wsLeft);
-            float ratio = (1.0f - angle) / 0.25f;
-            FlowRatios[0] = Mathf.Lerp(0.0f, 2.0f, ratio);
-            FlowRatios[4] = 2.0f - FlowRatios[0];
+            // When angle is negative flow more to the left, when angle is positive flow more to the right
+            float angle = Vector3.Dot(Vector3.Normalize(csBottom), wsLeft);
+            
+            // 0 is left, 1 is right, 0.5 is center
+            float ratio = Mathf.Clamp01((angle + 0.25f) * 2.0f); 
+            
+            // Left cell flow ratio
+            FlowRatios[0] = Mathf.Lerp(1.5f, 0.5f, ratio);
+            
+            // Right cell flow ratio
+            FlowRatios[4] = Mathf.Lerp(0.5f, 1.5f, ratio);
 
+            FlowRatios[1] = Mathf.Lerp(0.33f, 0.167f, ratio);
+            FlowRatios[3] = Mathf.Lerp(0.167f, 0.33f, ratio);
+
+            // Bottom cell flow ratio
             angle = Vector3.Dot(Vector3.Normalize(csBottom), wsBottom);
-            ratio = (0.25f - angle) / 0.25f;
+            ratio = (angle - 0.75f) * 4.0f;
             FlowRatios[2] = Mathf.Lerp(0.33f, 0.66f, ratio);
 
-            angle = Vector3.Dot(Vector3.Normalize(csBottomLeft), wsLeft);
-            ratio = (0.25f - angle) / 0.25f;
-            FlowRatios[1] = Mathf.Lerp(0.167f, 0.33f, ratio);
-            FlowRatios[3] = FlowRatios[1] - 0.167f;
+            //angle = Vector3.Dot(Vector3.Normalize(csBottomLeft), wsLeft);
+            //ratio = (0.25f - angle) / 0.25f;
 
             /*
             Vector2 gravity = GetGravityVector(out var _);

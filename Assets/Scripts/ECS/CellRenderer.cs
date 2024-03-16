@@ -15,8 +15,8 @@ namespace WaterSimulation
         private EntityQuery _entityQuery;
         private int _valuesShaderProperty;
         private MaterialPropertyBlock _materialPropertyBlock;
-        private readonly List<List<Matrix4x4>> _matrices = new List<List<Matrix4x4>>();
-        private readonly List<List<Vector4>> _uvs = new List<List<Vector4>>();
+        private readonly List<List<Matrix4x4>> _matrices = new();
+        private readonly List<List<Vector4>> _uvs = new();
         private bool _allocated = false;
         private bool _createdMatrixData = false;
 

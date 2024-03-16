@@ -13,7 +13,7 @@ namespace WaterSimulation
         {
             Vector2 gravity = WaterSimulationGrid.GetInstance().GetGravityVector(/*out bool isDiagonal*/);
 
-            Vector2 defaultGravity = new Vector2(0.0f, 1.0f);
+            Vector2 defaultGravity = new(0.0f, 1.0f);
 
             float dot = Vector2.Dot(gravity, defaultGravity);
             float det = gravity.x * defaultGravity.y - gravity.y * defaultGravity.x;
