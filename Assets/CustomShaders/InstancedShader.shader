@@ -85,6 +85,7 @@ Shader "Custom/InstancedShader"
             {
                 UNITY_SETUP_INSTANCE_ID(i);
     
+                // We can probably solve this better with a plane equation.
                 float liquid = i.uv.z;
                 float angle = i.uv.w;
                 float water = square(i.uv.xy, 0.5 * _Ratio, float2(0.0, liquid * _Ratio), angle);                

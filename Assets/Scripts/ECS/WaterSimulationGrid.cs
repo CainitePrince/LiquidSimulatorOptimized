@@ -284,6 +284,7 @@ namespace WaterSimulation
             // Right cell flow ratio
             FlowRatios[4] = Mathf.Lerp(0.5f, 1.5f, ratio);
 
+            // Bottom left and bottom right flow ratios
             FlowRatios[1] = Mathf.Lerp(0.33f, 0.167f, ratio);
             FlowRatios[3] = Mathf.Lerp(0.167f, 0.33f, ratio);
 
