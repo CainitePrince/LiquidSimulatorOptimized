@@ -4,46 +4,6 @@ using Unity.Collections;
 
 namespace WaterSimulation
 {
-    /*
-     * This code is based on https://github.com/BroMayo/unity-dots-ca-watersim 
-     * which in turn is based on https://github.com/jongallant/LiquidSimulator
-     * 
-     * I have added arbitrary gravity, implementing 8-connectivity to make diagonal gravity work.
-     * This alters the behaviour of the simulation a bit, water will go through diagonal gaps in walls and will also flow diagonally.
-     * I removed water flowing up through pressure. The rendering was also changed to support rotation of water.
-     * 
-     * I updated the code to a more recent version of Unity, as well as fixed a couple of bugs in the original code.
-     * 
-     * I have significantly improved the performance of the code by:
-     * - removal of unused or unnecessary component data
-     * - implementing look up tables for neighbours
-     * - splitting up component data for simulation and rendering
-     * - avoiding per frame memory allocations
-     * - avoiding doing work every frame for data that doesn't change
-     * - avoiding bounds checking for neighbours, this is not necessary when the outer border is always solid 
-     * 
-     * For a grid that is 80x40 the simulation is currently gpu bound, rather than the simulation being the bottleneck.
-     * The original DOTS code (first link) was running with a 150x150 grid at roughly 16 ms per frame.
-     * The current code can run with a 450x450 grid at roughly 16 ms per frame.
-     * 
-     * The simulation can probably be made faster by implementing it with compute shaders.
-     */
-
-    /// <summary>
-    /// Direction of gravity
-    /// </summary>
-    public enum GravityEnum
-    {
-        Down,
-        Left,
-        Up,
-        Right,
-        DownLeft,
-        UpLeft,
-        UpRight,
-        DownRight
-    }
-
     /// <summary>
     /// This script can be put on a game object to control the simulation
     /// </summary>
